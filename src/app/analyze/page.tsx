@@ -30,6 +30,41 @@ function AnalyzeContent() {
 
   const logsEndRef = useRef<HTMLDivElement>(null);
 
+  // Automatically trigger analysis if 'url' query param is passed
+  useEffect(() => {
+    const urlFromQuery = searchParams.get('url');
+    if (urlFromQuery && !activeJobId && !isSubmitting) {
+      setGithubUrl(urlFromQuery);
+      
+      const autoSubmit = async () => {
+        setIsSubmitting(true);
+        setErrorMsg('');
+        setLogs([]);
+        setProgress(0);
+
+        try {
+          const res = await fetch('/api/repos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ githubUrl: urlFromQuery }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to submit repository');
+
+          setActiveJobId(data.repositoryId);
+          setJobStatus('pending');
+          router.push(`/analyze?id=${data.repositoryId}`);
+        } catch (err: any) {
+          setErrorMsg(err.message || 'An error occurred.');
+          setIsSubmitting(false);
+        }
+      };
+      
+      autoSubmit();
+    }
+  }, [searchParams]);
+
   // Poll job status if activeJobId is present
   useEffect(() => {
     if (!activeJobId) return;

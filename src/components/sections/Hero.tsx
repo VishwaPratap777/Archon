@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import { Terminal, ArrowRight } from 'lucide-react';
+import { Terminal, ArrowRight, GitBranch } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [repoUrl, setRepoUrl] = useState('');
   
   // Parallax glow effect using springs
   const mouseX = useSpring(0, { stiffness: 60, damping: 15 });
@@ -14,6 +17,12 @@ export default function Hero() {
 
   const glowX = useTransform(mouseX, [-0.5, 0.5], ['-10%', '10%']);
   const glowY = useTransform(mouseY, [-0.5, 0.5], ['-10%', '10%']);
+
+  const handleStartAnalysis = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repoUrl) return;
+    router.push(`/analyze?url=${encodeURIComponent(repoUrl.trim())}`);
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -26,7 +35,7 @@ export default function Hero() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Initial load animations using GSAP (Delays reduced since preloader is removed)
+    // Initial load animations using GSAP
     const ctx = gsap.context(() => {
       // Reveal tagline
       gsap.fromTo(
@@ -57,9 +66,9 @@ export default function Hero() {
         { opacity: 0.75, y: 0, scale: 1, duration: 0.8, ease: 'cubic-bezier(0.23, 1, 0.32, 1)', delay: 0.5 }
       );
 
-      // Reveal buttons
+      // Reveal search input bar
       gsap.fromTo(
-        '.hero-cta',
+        '.hero-input-bar',
         { opacity: 0, y: 15, scale: 0.98 },
         { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'cubic-bezier(0.23, 1, 0.32, 1)', delay: 0.6 }
       );
@@ -87,7 +96,7 @@ export default function Hero() {
       />
 
       {/* Hero content */}
-      <div className="text-center max-w-4xl mx-auto space-y-8 relative z-10 flex flex-col items-center select-none">
+      <div className="text-center max-w-4xl mx-auto space-y-8 relative z-10 flex flex-col items-center select-none w-full">
         {/* Tagline */}
         <div className="hero-tagline opacity-0 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#618764]/10 bg-[#618764]/5 text-[10px] font-mono tracking-[0.25em] text-[#2b5748] uppercase">
           <Terminal className="h-3.5 w-3.5 text-[#2b5748]" /> Autonomous Decision Engine
@@ -107,21 +116,37 @@ export default function Hero() {
           Archon parses code syntax tree structural nodes dynamically and traces complete commit lineage to generate architectural dependency graphs, design decisions, and bespoke dev curriculums.
         </p>
 
-        {/* Buttons */}
-        <div className="hero-cta opacity-0 pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-          <a
-            href="#demo"
-            className="pressable-btn w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2b5748] to-[#618764] hover:from-[#1d3c31] hover:to-[#4e6c50] px-7 py-4 text-xs font-mono tracking-widest uppercase text-white shadow-lg shadow-[#2b5748]/15"
+        {/* Premium Input Bar Capsule */}
+        <div className="hero-input-bar opacity-0 -mt-2.5 w-full max-w-md flex flex-col items-center gap-4">
+          <form
+            onSubmit={handleStartAnalysis}
+            className="w-full flex items-center justify-between p-1.5 rounded-2xl border border-black/8 bg-white/70 backdrop-blur-md shadow-lg shadow-black/[0.03] transition-all focus-within:border-[#618764] focus-within:shadow-[#618764]/5 focus-within:shadow-md"
           >
-            Launch Console
-            <ArrowRight className="h-3.5 w-3.5 text-white" />
-          </a>
+            <div className="flex items-center gap-2.5 pl-3 flex-grow min-w-0">
+              <GitBranch className="h-4.5 w-4.5 text-[#2b5748] flex-shrink-0" />
+              <input
+                type="text"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder="https://github.com/VishwaPratap777/Archon"
+                className="w-full text-xs font-mono text-cream focus:outline-none placeholder-cream-muted bg-transparent py-2.5 pr-2"
+              />
+            </div>
+            
+            <button
+              type="submit"
+              className="pressable-btn flex-shrink-0 rounded-xl bg-gradient-to-r from-[#2b5748] to-[#618764] hover:from-[#1d3c31] hover:to-[#4e6c50] px-5 py-3 text-[10px] font-mono tracking-widest uppercase text-white font-semibold flex items-center gap-1.5"
+            >
+              Analyze <ArrowRight className="h-3 w-3 text-white" />
+            </button>
+          </form>
 
+          {/* Under-caption link */}
           <a
             href="#hold-to-unlock"
-            className="pressable-btn w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-black/5 hover:border-black/10 bg-black/2.5 px-7 py-4 text-xs font-mono tracking-widest uppercase text-cream hover:text-white"
+            className="text-[9px] font-mono tracking-widest uppercase text-cream-muted hover:text-[#2b5748] transition-colors duration-200"
           >
-            Access Credentials
+            or hold to unlock credentials key
           </a>
         </div>
       </div>
