@@ -1,26 +1,235 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Warm Light Editorial Theme Color Palette */
+  --bg-primary: #faf8f4; /* Warm yellow-white base */
+  --bg-surface: #f3efe6; /* Slightly darker cream/yellow-white */
+  --bg-card: #ffffff; /* Pure white panels */
+  
+  --cream: #273338; /* Primary Slate Dark Text (for readability on light BG) */
+  --cream-dim: #2b5748; /* Secondary Deep Pine Green Text */
+  --cream-muted: #618764; /* Muted Forest Green Text */
+  
+  --border-light: rgba(39, 51, 56, 0.08); /* Delicate slate borders */
+  --border-medium: rgba(39, 51, 56, 0.15);
+  
+  --primary: #2b5748; /* Deep Pine Green */
+  --primary-glow: rgba(43, 87, 72, 0.08);
+  --secondary: #618764; /* Medium Forest Green */
+  --secondary-glow: rgba(97, 135, 100, 0.08);
+  
+  --accent: #9cb080; /* Sage Green */
+  --accent-glow: rgba(156, 176, 128, 0.15);
+
+  /* Modern High-Grade Clean Typography */
+  --font-sans: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), monospace;
+  
+  /* Easing curves from Emil's animation philosophy */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  
+  --transition-fast: 160ms var(--ease-out);
+  --transition-medium: 260ms var(--ease-out);
+  --transition-slow: 400ms var(--ease-out);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--cream);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   BASE & RESET
+   ============================================================ */
+body {
+  background-color: var(--bg-primary);
+  color: var(--cream);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Soft Warm Editorial Noise Overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Premium micro-interactions classes */
+.pressable-btn {
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+
+.pressable-btn:active {
+  transform: scale(0.97);
+}
+
+/* Glassmorphism panel system (Light mode optimized) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  transition: border-color var(--transition-medium), box-shadow var(--transition-medium), transform var(--transition-medium);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-medium);
+  box-shadow: 0 12px 32px 0 rgba(39, 51, 56, 0.05);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cream-muted);
+}
+
+/* ============================================================
+   CUSTOM CURSOR (Light mode optimized)
+   ============================================================ */
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background-color: var(--cream);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 200ms ease, height 200ms ease, background-color 200ms ease;
+}
+
+.cursor-ring {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(39, 51, 56, 0.2);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  will-change: left, top;
+  transition: width 200ms ease, height 200ms ease, border-color 200ms ease, background-color 200ms ease;
+}
+
+.cursor-dot.hovered {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+}
+
+.cursor-ring.hovered {
+  width: 50px;
+  height: 50px;
+  border-color: var(--primary);
+  background-color: rgba(43, 87, 72, 0.04);
+}
+
+/* ============================================================
+   3D FLIP LINK
+   ============================================================ */
+.flip-link {
+  position: relative;
+  display: inline-block;
+  perspective: 1000px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.flip-link-char {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  transform-style: preserve-3d;
+}
+
+.flip-link-letter {
+  display: inline-block;
+  transform-origin: center bottom;
+  transition: transform 0.38s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.flip-link-letter-clone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: inline-block;
+  transform-origin: center top;
+  transform: translateY(100%) rotateX(-90deg);
+  transition: transform 0.38s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.flip-link:hover .flip-link-letter {
+  transform: translateY(-100%) rotateX(90deg);
+}
+
+.flip-link:hover .flip-link-letter-clone {
+  transform: translateY(0) rotateX(0deg);
+}
+
+/* ============================================================
+   ENTRY ANIMATIONS (CSS @starting-style)
+   ============================================================ */
+.fade-in-up {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+  
+  @starting-style {
+    opacity: 0;
+    transform: translateY(20px);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.fade-in-up-stagger {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+}
+
+/* Orbital floating animation for background grids */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.floating-asset {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Hide scrollbar for layout wrappers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
