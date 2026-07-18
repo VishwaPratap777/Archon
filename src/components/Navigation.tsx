@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Layers, Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import FlipLink from '@/components/ui/FlipLink';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,11 +35,20 @@ export default function Navigation() {
         >
           {/* Logo (Left) */}
           <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#9CB080] to-[#618764] text-white transition-transform duration-300 group-hover:scale-105 active:scale-95">
-              <Layers className="h-4.5 w-4.5" />
+            <div className="relative flex h-7 w-7 items-center justify-center transition-transform duration-300 group-hover:scale-105 active:scale-95">
+              <svg viewBox="0 0 100 100" className="h-full w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9CB080" />
+                    <stop offset="100%" stopColor="#618764" />
+                  </linearGradient>
+                </defs>
+                <path d="M 50 12 L 83 78 L 68 78 L 50 42 L 32 78 L 17 78 Z" fill="url(#logo-grad)" />
+                <path d="M 50 60 L 58 78 L 42 78 Z" fill="url(#logo-grad)" />
+              </svg>
             </div>
-            <span className="font-sans font-bold tracking-wider text-sm text-white">
-              ARCHON
+            <span className="font-sans font-bold tracking-[0.25em] text-sm text-white select-none">
+              ΛRCHON
             </span>
           </Link>
 
