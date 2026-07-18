@@ -54,7 +54,7 @@ export default function RepositoryNetwork() {
     const staticNodes: StaticNode[] = [];
     const nodeCount = 140; // Number of dynamic active neural nodes
     const staticNodeCount = 750; // Number of static micro-nodes in deep background
-    const connectionDistance = 115; // Max distance for drawing synapses
+    const connectionDistance = 155; // Max distance for drawing synapses
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -149,7 +149,7 @@ export default function RepositoryNetwork() {
           if (dist < connectionDistance) {
             // Pulse the synapse line opacity slowly
             const pulse = Math.sin((n1.pulsePhase + n2.pulsePhase) * 0.5) * 0.05 + 0.95;
-            const alpha = (1 - dist / connectionDistance) * 0.15 * pulse;
+            const alpha = (1 - dist / connectionDistance) * 0.28 * pulse;
             
             ctx.beginPath();
             ctx.globalAlpha = alpha;
@@ -160,8 +160,28 @@ export default function RepositoryNetwork() {
         }
       }
 
-      // 3. Update & Draw active nodes
+      // 2.5. Draw synapses connecting directly to the mouse pointer
       const mouse = mouseRef.current;
+      if (mouse.active) {
+        ctx.strokeStyle = '#618764'; // Forest green synapses to mouse
+        ctx.lineWidth = 0.8;
+        for (const n of activeNodes) {
+          const mdx = mouse.x - n.x;
+          const mdy = mouse.y - n.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+          if (mdist < 155) {
+            const alpha = (1 - mdist / 155) * 0.35;
+            ctx.beginPath();
+            ctx.globalAlpha = alpha;
+            ctx.moveTo(mouse.x, mouse.y);
+            ctx.lineTo(n.x, n.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // 3. Update & Draw active nodes
       ctx.font = '7px JetBrains Mono, var(--font-geist-mono), monospace';
       ctx.textBaseline = 'middle';
 
