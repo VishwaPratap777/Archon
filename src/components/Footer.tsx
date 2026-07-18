@@ -72,21 +72,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Center Sanskrit Shloka Block */}
-        <div className="border-t border-black/5 py-12 flex flex-col items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, filter: 'blur(10px)', y: 15 }}
-            whileInView={{ opacity: 0.6, filter: 'blur(0px)', y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
-            className="text-center font-serif text-[clamp(1.5rem,3.5vw,2.5rem)] font-light italic text-cream tracking-wider"
-          >
-            || निर्णयः परमं बलम् ||
-          </motion.div>
-          <div className="text-[9px] font-mono tracking-[0.3em] uppercase text-cream-muted mt-2">
-            Decision is the ultimate strength
-          </div>
-        </div>
 
         {/* Bottom copyright */}
         <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] font-mono tracking-widest uppercase text-cream-muted gap-4">
