@@ -233,3 +233,9 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.995); }
+  to { opacity: 0.55; transform: scale(1); }
+}
+

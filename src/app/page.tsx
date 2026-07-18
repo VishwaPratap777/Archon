@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 
+import RepositoryNetwork from '@/components/ui/RepositoryNetwork';
 import CustomCursor from '@/components/ui/CustomCursor';
 import Navigation from '@/components/Navigation';
 import Hero from '@/components/sections/Hero';
@@ -38,11 +39,14 @@ export default function Home() {
       {/* Premium Noise Grain Overlay */}
       <div className="noise-overlay" aria-hidden="true" />
       
+      {/* Neural pulsing repository network background */}
+      <RepositoryNetwork />
+      
       {/* Custom Cursor System */}
       <CustomCursor />
 
       {/* Main Page Layout */}
-      <div className="relative flex flex-col min-h-screen opacity-100">
+      <div className="relative flex flex-col min-h-screen opacity-100 z-10">
         <Navigation />
         
         <main className="flex-grow">
