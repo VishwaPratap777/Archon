@@ -6,6 +6,7 @@ import { Save, Key, GitBranch, Sparkles, Loader2, CheckCircle2, AlertTriangle, S
 
 export default function SettingsPage() {
   const [githubPat, setGithubPat] = useState('');
+  const [groqApiKey, setGroqApiKey] = useState('');
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [anthropicApiKey, setAnthropicApiKey] = useState('');
   
@@ -23,6 +24,7 @@ export default function SettingsPage() {
         if (res.ok) {
           const data = await res.json();
           setGithubPat(data.githubPat || '');
+          setGroqApiKey(data.groqApiKey || '');
           setOpenaiApiKey(data.openaiApiKey || '');
           setAnthropicApiKey(data.anthropicApiKey || '');
         }
@@ -47,6 +49,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           githubPat,
+          groqApiKey,
           openaiApiKey,
           anthropicApiKey,
         }),
@@ -62,6 +65,7 @@ export default function SettingsPage() {
       if (freshRes.ok) {
         const freshData = await freshRes.json();
         setGithubPat(freshData.githubPat || '');
+        setGroqApiKey(freshData.groqApiKey || '');
         setOpenaiApiKey(freshData.openaiApiKey || '');
         setAnthropicApiKey(freshData.anthropicApiKey || '');
       }
@@ -145,45 +149,75 @@ export default function SettingsPage() {
                 </div>
 
                 {/* LLM Config */}
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <Key className="h-5 w-5 text-gray-400" />
-                    <h2 className="text-lg font-semibold text-white">AI Engine Credentials</h2>
+                <div className="space-y-6 pt-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Key className="h-5 w-5 text-gray-400" />
+                      <h2 className="text-lg font-semibold text-white">AI Engine Credentials</h2>
+                    </div>
+                    <span className="text-[10px] uppercase font-mono text-purple-400 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                      Groq Primary
+                    </span>
                   </div>
                   
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="anthropic-key" className="block text-xs font-medium uppercase tracking-wider text-gray-400 mb-2">
-                        Anthropic API Key
+                  {/* Primary Engine: Groq */}
+                  <div className="glass-panel border-purple-950/20 p-6 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="groq-key" className="block text-xs font-semibold uppercase tracking-wider text-purple-400">
+                        Groq API Key (Primary)
                       </label>
-                      <input
-                        id="anthropic-key"
-                        type="password"
-                        placeholder="sk-ant-xxxxxxxxxxxx"
-                        value={anthropicApiKey}
-                        onChange={(e) => setAnthropicApiKey(e.target.value)}
-                        className="premium-input w-full font-mono text-sm"
-                      />
-                      <p className="mt-1.5 text-xs text-gray-500">
-                        Recommended key. Powers architecture synthesis and onboarding curriculum design.
-                      </p>
+                      <span className="text-[9px] font-mono text-gray-500">Model: llama-3.3-70b-versatile</span>
                     </div>
+                    <input
+                      id="groq-key"
+                      type="password"
+                      placeholder="gsk_xxxxxxxxxxxx"
+                      value={groqApiKey}
+                      onChange={(e) => setGroqApiKey(e.target.value)}
+                      className="premium-input w-full font-mono text-sm border-purple-950/30 focus:border-purple-500/50"
+                    />
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Groq acts as the **primary** high-speed engine for full AST parsing, complexity scoring, and running structural AI Agents with minimal latency.
+                    </p>
+                  </div>
 
-                    <div>
-                      <label htmlFor="openai-key" className="block text-xs font-medium uppercase tracking-wider text-gray-400 mb-2">
-                        OpenAI API Key
-                      </label>
-                      <input
-                        id="openai-key"
-                        type="password"
-                        placeholder="sk-proj-xxxxxxxxxxxx"
-                        value={openaiApiKey}
-                        onChange={(e) => setOpenaiApiKey(e.target.value)}
-                        className="premium-input w-full font-mono text-sm"
-                      />
-                      <p className="mt-1.5 text-xs text-gray-500">
-                        Powers code vector embeddings calculation and story timeline.
-                      </p>
+                  {/* Fallback Engines */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Optional Fallbacks</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="openai-key" className="block text-[11px] font-medium text-gray-400 mb-1.5">
+                          OpenAI API Key (Optional)
+                        </label>
+                        <input
+                          id="openai-key"
+                          type="password"
+                          placeholder="sk-proj-xxxxxxxxxxxx"
+                          value={openaiApiKey}
+                          onChange={(e) => setOpenaiApiKey(e.target.value)}
+                          className="premium-input w-full font-mono text-xs"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500 leading-normal">
+                          User optional. If configured, you can run the codebase with standard OpenAI models (GPT-4o-mini). Useful for quick local clones.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="anthropic-key" className="block text-[11px] font-medium text-gray-400 mb-1.5">
+                          Anthropic API Key (Optional)
+                        </label>
+                        <input
+                          id="anthropic-key"
+                          type="password"
+                          placeholder="sk-ant-xxxxxxxxxxxx"
+                          value={anthropicApiKey}
+                          onChange={(e) => setAnthropicApiKey(e.target.value)}
+                          className="premium-input w-full font-mono text-xs"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500 leading-normal">
+                          Powers optional high-fidelity reasoning using Claude 3.5 Sonnet if Groq is unavailable.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -27,7 +27,30 @@ export interface RepositoryContext {
 async function callLLM(prompt: string, systemPrompt: string): Promise<string> {
   const settings: any = await getSettings();
   
-  // 1. Try Anthropic (Claude)
+  // 1. Try Groq (Llama 3.3) as primary
+  const groqKey = settings.groqApiKey || process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const client = new OpenAI({
+        apiKey: groqKey,
+        baseURL: 'https://api.groq.com/openai/v1',
+      });
+      const completion = await client.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+      });
+      return completion.choices[0].message.content || '{}';
+    } catch (err) {
+      console.error('Groq API Call Failed, trying Anthropic fallback...', err);
+    }
+  }
+
+  // 2. Try Anthropic (Claude)
   const anthropicKey = settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
   if (anthropicKey) {
     try {
@@ -44,11 +67,11 @@ async function callLLM(prompt: string, systemPrompt: string): Promise<string> {
         return contentBlock.text;
       }
     } catch (err) {
-      console.error('Anthropic API Call Failed, trying OpenAI...', err);
+      console.error('Anthropic API Call Failed, trying OpenAI fallback...', err);
     }
   }
 
-  // 2. Try OpenAI
+  // 3. Try OpenAI
   const openaiKey = settings.openaiApiKey || process.env.OPENAI_API_KEY;
   if (openaiKey) {
     try {

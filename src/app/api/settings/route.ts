@@ -9,9 +9,11 @@ export async function GET() {
     // Mask sensitive keys before sending
     const response = {
       githubPat: settings.githubPat ? `ghp_***${settings.githubPat.slice(-4)}` : '',
+      groqApiKey: settings.groqApiKey ? `gsk_***${settings.groqApiKey.slice(-4)}` : '',
       openaiApiKey: settings.openaiApiKey ? `sk-proj-***${settings.openaiApiKey.slice(-4)}` : '',
       anthropicApiKey: settings.anthropicApiKey ? `sk-ant-***${settings.anthropicApiKey.slice(-4)}` : '',
       hasGithubPat: !!settings.githubPat,
+      hasGroqApiKey: !!settings.groqApiKey,
       hasOpenaiApiKey: !!settings.openaiApiKey,
       hasAnthropicApiKey: !!settings.anthropicApiKey,
     };
@@ -33,6 +35,9 @@ export async function POST(request: Request) {
     
     if (data.githubPat && !data.githubPat.includes('***')) {
       updates.githubPat = data.githubPat.trim();
+    }
+    if (data.groqApiKey && !data.groqApiKey.includes('***')) {
+      updates.groqApiKey = data.groqApiKey.trim();
     }
     if (data.openaiApiKey && !data.openaiApiKey.includes('***')) {
       updates.openaiApiKey = data.openaiApiKey.trim();

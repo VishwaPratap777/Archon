@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ΛRCHON - AI-Powered Repository Intelligence Platform
+
+Archon is an advanced engineering intelligence platform that reconstructs codebase architecture, onboarding guidelines, technical debt, and history by parsing code ASTs and utilizing reasoning AI agents.
 
 ## Getting Started
 
-First, run the development server:
-
+### 1. Run MongoDB Local Server
+Ensure you have MongoDB running locally:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+mongodb://127.0.0.1:27017/archon
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Credentials
+Copy `.env.local.example` or create `.env.local` in the `archon` directory:
+```bash
+GROQ_API_KEY=your-groq-key
+OPENAI_API_KEY=your-openai-key
+ANTHROPIC_API_KEY=your-anthropic-key
+GITHUB_PAT=your-github-pat
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> [!NOTE]
+> **AI Engine Priority & Optional Keys:**
+> - **Groq** (`llama-3.3-70b-versatile`) acts as the **primary, default engine** for ultra-high-speed analysis.
+> - **OpenAI** (`gpt-4o-mini`) and **Anthropic** (`claude-3.5-sonnet`) are configured as **optional fallbacks**.
+> - **If you clone this repository**, you do not need all keys! You can simply plug in your **OpenAI API Key** alone, and the system will automatically fall back to OpenAI to execute all agents and vector search embeddings.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Run the Development Server
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) to view the landing page and start analyzing codebases.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Verification
+To verify code compiles and type checks:
+```bash
+npm run build
+```
