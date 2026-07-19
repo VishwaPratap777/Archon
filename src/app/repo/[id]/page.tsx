@@ -52,7 +52,8 @@ export default function RepoDashboardPage() {
   useEffect(() => {
     async function fetchRepoDetails() {
       try {
-        const res = await fetch(`/api/repos/${repoId}`);
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_BASE}/api/repos/${repoId}`);
         if (!res.ok) throw new Error('Repository details not found');
         const json = await res.json();
         setData(json);
@@ -71,7 +72,8 @@ export default function RepoDashboardPage() {
     setSelectedFile(nodeData);
     setFileContent('');
     try {
-      const res = await fetch(`/api/repos/${repoId}/files?path=${encodeURIComponent(nodeData.path)}`);
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/repos/${repoId}/files?path=${encodeURIComponent(nodeData.path)}`);
       if (res.ok) {
         const fileDetail = await res.json();
         setFileContent(fileDetail.content);

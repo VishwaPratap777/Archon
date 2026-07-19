@@ -20,7 +20,8 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadSettings() {
       try {
-        const res = await fetch('/api/settings');
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_BASE}/api/settings`);
         if (res.ok) {
           const data = await res.json();
           setGithubPat(data.githubPat || '');
@@ -44,7 +45,8 @@ export default function SettingsPage() {
     setErrorMessage('');
     
     try {
-      const res = await fetch('/api/settings', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,7 +63,7 @@ export default function SettingsPage() {
 
       setSaveStatus('success');
       // Reload settings to refresh masked representations
-      const freshRes = await fetch('/api/settings');
+      const freshRes = await fetch(`${API_BASE}/api/settings`);
       if (freshRes.ok) {
         const freshData = await freshRes.json();
         setGithubPat(freshData.githubPat || '');
@@ -87,7 +89,8 @@ export default function SettingsPage() {
     setIsDeleting(true);
     setDeleteMessage('');
     try {
-      const res = await fetch('/api/repos', { method: 'DELETE' });
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/repos`, { method: 'DELETE' });
       if (res.ok) {
         setDeleteMessage('Database cleared successfully!');
         setTimeout(() => setDeleteMessage(''), 3000);

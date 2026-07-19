@@ -43,7 +43,8 @@ function AnalyzeContent() {
         setProgress(0);
 
         try {
-          const res = await fetch('/api/repos', {
+          const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const res = await fetch(`${API_BASE}/api/repos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ githubUrl: urlFromQuery }),
@@ -73,7 +74,8 @@ function AnalyzeContent() {
     
     async function pollStatus() {
       try {
-        const res = await fetch(`/api/repos/${activeJobId}/status`);
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_BASE}/api/repos/${activeJobId}/status`);
         if (!res.ok) throw new Error('Status check failed');
         
         const data = await res.json();
@@ -116,7 +118,8 @@ function AnalyzeContent() {
     setProgress(0);
 
     try {
-      const res = await fetch('/api/repos', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/repos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ githubUrl }),
