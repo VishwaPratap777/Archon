@@ -233,8 +233,8 @@ export default function RepositoryNetwork() {
         // Render Repository label text next to labeled nodes
         if (n.label) {
           ctx.beginPath();
-          ctx.globalAlpha = isHovered ? 0.85 : 0.16; // Reveal fully when hovered
-          ctx.fillStyle = '#273338';
+          ctx.globalAlpha = isHovered ? 0.9 : 0.18;
+          ctx.fillStyle = '#9CB080'; // sage green — visible on dark backgrounds
           ctx.fillText(n.label, n.x + n.baseRadius * 2.5 + 2, n.y);
         }
       }
@@ -257,10 +257,10 @@ export default function RepositoryNetwork() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none select-none z-0 opacity-0 animate-[fadeIn_1.6s_var(--ease-out)_0.4s_forwards]"
+      className="fixed inset-0 w-full h-full pointer-events-none select-none z-0"
       style={{
-        // Slow fade-in to prevent flash of canvas content on load
-        animationFillMode: 'forwards',
+        opacity: 0,
+        animation: 'fadeInCanvas 1.6s cubic-bezier(0.23,1,0.32,1) 0.4s forwards',
       }}
     />
   );

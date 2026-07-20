@@ -243,12 +243,28 @@ html.light ::-webkit-scrollbar-thumb:hover { background: rgba(43, 87, 72, 0.45);
 /* ============================================================
    ORBITAL FLOAT
    ============================================================ */
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+/* Canvas network background — fades from 0 → 1 */
+@keyframes fadeInCanvas {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* General fade-up entry */
 @keyframes float {
   0%   { transform: translateY(0px) rotate(0deg); }
   50%  { transform: translateY(-14px) rotate(1.5deg); }
   100% { transform: translateY(0px) rotate(0deg); }
 }
 .floating-asset { animation: float 6s ease-in-out infinite; }
+
+.fade-in-up {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+  @starting-style { opacity: 0; transform: translateY(18px); }
+}
 
 /* ============================================================
    HIDE SCROLLBAR UTILITY
