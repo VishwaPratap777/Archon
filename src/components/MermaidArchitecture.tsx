@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTheme } from '@/lib/ThemeContext';
+import { Network, Layers, ChevronDown, ChevronUp } from 'lucide-react';
 
+/* ─────────────────────────── Types ──────────────────────────── */
 interface GraphNode {
-  id: string;
+  id: string; // MongoDB _id
   data: {
     path: string;
-    label?: string;
     loc?: number;
     complexity?: number;
+    extension?: string;
     importsCount?: number;
     functionsCount?: number;
     classesCount?: number;
@@ -19,152 +21,241 @@ interface GraphNode {
 
 interface GraphEdge {
   id: string;
-  source: string;
-  target: string;
-  label?: string;
+  source: string; // MongoDB _id
+  target: string; // MongoDB _id
 }
 
 interface MermaidArchitectureProps {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  arch?: any;          // reports.architecture — for overview mode
   onNodeClick: (nodeData: any) => void;
 }
 
-/** Sanitise a file path into a safe Mermaid node ID */
-function toNodeId(path: string): string {
-  return path.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^_+/, '').slice(0, 40);
+/* ─────────────────────── Safe Mermaid ID ────────────────────── */
+// MongoDB IDs are hex strings — prefix with 'n' to ensure they start with a letter
+function safeId(id: string): string {
+  return 'n' + id.replace(/[^a-zA-Z0-9]/g, '');
 }
 
-/** Shorten a path to a readable label */
-function toLabel(path: string): string {
-  const parts = path.split(/[\\/]/);
-  const filename = parts[parts.length - 1] || path;
-  // keep extension visible but cap total length
-  return filename.length > 28 ? filename.slice(0, 25) + '…' : filename;
+function safeLabel(s: string): string {
+  return s.replace(/"/g, "'").replace(/[<>{}|]/g, ' ').trim();
 }
 
+function filename(path: string): string {
+  const parts = path.replace(/\\/g, '/').split('/');
+  const name = parts[parts.length - 1] || path;
+  return name.length > 26 ? name.slice(0, 23) + '…' : name;
+}
+
+function topDir(path: string): string {
+  const p = path.replace(/\\/g, '/');
+  const parts = p.split('/');
+  return parts.length > 1 ? parts[0] : '(root)';
+}
+
+/* ─────────────────── OVERVIEW diagram builder ───────────────── */
 /**
- * Build a Mermaid flowchart LR definition string from the graph data.
+ * Groups files by top-level directory, then builds edges between
+ * directories based on actual file-level import connections.
+ * Results in a compact ~5–10 node "architectural" flowchart.
  */
-function buildMermaidDef(nodes: GraphNode[], edges: GraphEdge[]): string {
-  const nodeSet = new Set(nodes.map(n => n.id));
+function buildOverviewDef(nodes: GraphNode[], edges: GraphEdge[], arch: any): string {
+  // 1. Group node IDs by top-level directory
+  const dirToIds: Record<string, string[]> = {};
+  const idToDir: Record<string, string> = {};
+  nodes.forEach(n => {
+    const dir = topDir(n.data.path || '');
+    if (!dirToIds[dir]) dirToIds[dir] = [];
+    dirToIds[dir].push(n.id);
+    idToDir[n.id] = dir;
+  });
 
-  const nodeDefs = nodes.map(n => {
-    const id = toNodeId(n.id);
-    const label = toLabel(n.data.path || n.id);
+  const dirs = Object.keys(dirToIds);
+
+  // 2. Build inter-directory edge counts
+  const dirEdgeCounts: Record<string, number> = {};
+  edges.forEach(e => {
+    const srcDir = idToDir[e.source];
+    const tgtDir = idToDir[e.target];
+    if (srcDir && tgtDir && srcDir !== tgtDir) {
+      const key = `${srcDir}||${tgtDir}`;
+      dirEdgeCounts[key] = (dirEdgeCounts[key] || 0) + 1;
+    }
+  });
+
+  // 3. Pick the strongest inter-directory connections (top 15)
+  const dirEdges = Object.entries(dirEdgeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([key, count]) => {
+      const [src, tgt] = key.split('||');
+      return { src, tgt, count };
+    });
+
+  // 4. Determine which dirs are actually referenced
+  const activeDirs = new Set<string>();
+  dirEdges.forEach(e => { activeDirs.add(e.src); activeDirs.add(e.tgt); });
+  // Also include dirs with the most files if they're isolated
+  dirs.slice(0, 8).forEach(d => activeDirs.add(d));
+
+  // 5. Generate Mermaid-safe IDs for dirs
+  const dirToNodeId: Record<string, string> = {};
+  [...activeDirs].forEach((dir, i) => {
+    dirToNodeId[dir] = `D${i}`;
+  });
+
+  // 6. Emit node & edge lines
+  const nodeLines = [...activeDirs].map(dir => {
+    const count = (dirToIds[dir] || []).length;
+    const label = safeLabel(`${dir}\\n(${count} files)`);
+    return `  ${dirToNodeId[dir]}["${label}"]`;
+  });
+
+  const edgeLines = dirEdges
+    .filter(e => dirToNodeId[e.src] && dirToNodeId[e.tgt])
+    .map(e => `  ${dirToNodeId[e.src]} -->|"${e.count} imports"| ${dirToNodeId[e.tgt]}`);
+
+  // 7. If arch has layers, add them as a chain at top
+  let archChain = '';
+  if (arch?.layers?.length > 1) {
+    const layerNodes = arch.layers.slice(0, 5).map((l: string, i: number) =>
+      `  LAY${i}["${safeLabel(l)}"]`
+    );
+    const layerEdges = arch.layers.slice(0, 4).map((_: any, i: number) =>
+      `  LAY${i} --> LAY${i + 1}`
+    );
+    archChain = layerNodes.join('\n') + '\n' + layerEdges.join('\n') + '\n';
+  }
+
+  return `flowchart LR\n${archChain}${nodeLines.join('\n')}\n${edgeLines.join('\n')}`;
+}
+
+/* ─────────────────── EXPANDED diagram builder ───────────────── */
+/**
+ * Shows the top N files by complexity, connected by their actual imports.
+ * Uses MongoDB _id as the Mermaid node ID (prefixed with 'n') to ensure
+ * source/target matching works correctly.
+ */
+function buildExpandedDef(nodes: GraphNode[], edges: GraphEdge[]): string {
+  // Limit to 40 highest-complexity files for legibility
+  const sorted = [...nodes].sort((a, b) =>
+    (b.data.complexity || 0) - (a.data.complexity || 0)
+  );
+  const topNodes = sorted.slice(0, 40);
+  const topIds = new Set(topNodes.map(n => n.id));
+
+  const nodeDefs = topNodes.map(n => {
+    const id = safeId(n.id);
+    const label = safeLabel(filename(n.data.path));
     return `  ${id}["${label}"]`;
   });
 
   const edgeDefs = edges
-    .filter(e => nodeSet.has(e.source) && nodeSet.has(e.target))
-    .slice(0, 120) // cap for readability
-    .map(e => {
-      const src = toNodeId(e.source);
-      const tgt = toNodeId(e.target);
-      return `  ${src} --> ${tgt}`;
-    });
+    .filter(e => topIds.has(e.source) && topIds.has(e.target))
+    .slice(0, 100)
+    .map(e => `  ${safeId(e.source)} --> ${safeId(e.target)}`);
 
-  return `flowchart LR\n${nodeDefs.join('\n')}\n${edgeDefs.join('\n')}`;
+  const clickDefs = topNodes.map(n => `  click ${safeId(n.id)} archonNodeClick`);
+
+  return `flowchart LR\n${nodeDefs.join('\n')}\n${edgeDefs.join('\n')}\n${clickDefs.join('\n')}`;
 }
+
+/* ─────────────────────── Mermaid theme ──────────────────────── */
+function getMermaidThemeVars(theme: string) {
+  return theme === 'light'
+    ? {
+        primaryColor: '#d4e8d0',
+        primaryTextColor: '#1a2820',
+        primaryBorderColor: '#618764',
+        lineColor: '#618764',
+        background: '#faf8f4',
+        mainBkg: '#e8f0e6',
+        nodeBorder: '#618764',
+        edgeLabelBackground: '#faf8f4',
+        fontFamily: 'Outfit, Inter, system-ui, sans-serif',
+      }
+    : {
+        primaryColor: '#2d1b5e',
+        primaryTextColor: '#e2d9f3',
+        primaryBorderColor: '#7c3aed',
+        lineColor: '#7c3aed',
+        background: '#0a0d0f',
+        mainBkg: '#1a1230',
+        nodeBorder: '#7c3aed',
+        edgeLabelBackground: '#0f0a1e',
+        fontFamily: 'Outfit, Inter, system-ui, sans-serif',
+      };
+}
+
+/* ──────────────────────── Component ─────────────────────────── */
+type ViewMode = 'overview' | 'expanded';
 
 export default function MermaidArchitecture({
   nodes,
   edges,
+  arch,
   onNodeClick,
 }: MermaidArchitectureProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
-  const renderedRef = useRef(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
 
-  // Map sanitised IDs back to original node data for click lookups
+  // ID→data lookup for click handlers (only needed in expanded mode)
   const idToData = useRef<Record<string, any>>({});
-  nodes.forEach(n => {
-    idToData.current[toNodeId(n.id)] = n.data;
-  });
+  useEffect(() => {
+    nodes.forEach(n => {
+      idToData.current[safeId(n.id)] = n.data;
+    });
+  }, [nodes]);
 
   const render = useCallback(async () => {
     if (!containerRef.current || nodes.length === 0) return;
+    containerRef.current.innerHTML = ''; // clear previous render
 
     const mermaid = (await import('mermaid')).default;
 
     mermaid.initialize({
       startOnLoad: false,
-      securityLevel: 'loose', // required for click handlers
+      securityLevel: 'loose',
       theme: theme === 'light' ? 'default' : 'dark',
-      themeVariables:
-        theme === 'light'
-          ? {
-              primaryColor:      '#d4e8d0',
-              primaryTextColor:  '#1a2820',
-              primaryBorderColor:'#618764',
-              lineColor:         '#618764',
-              secondaryColor:    '#e8f5e2',
-              tertiaryColor:     '#f5f2ec',
-              background:        '#faf8f4',
-              mainBkg:           '#e8f0e6',
-              nodeBorder:        '#618764',
-              clusterBkg:        '#f0f7ee',
-              titleColor:        '#1a2820',
-              edgeLabelBackground:'#faf8f4',
-              fontFamily: 'Outfit, Inter, system-ui, sans-serif',
-            }
-          : {
-              primaryColor:      '#2d1b5e',
-              primaryTextColor:  '#e2d9f3',
-              primaryBorderColor:'#7c3aed',
-              lineColor:         '#7c3aed',
-              secondaryColor:    '#1a1230',
-              tertiaryColor:     '#0f0a1e',
-              background:        '#0a0d0f',
-              mainBkg:           '#1a1230',
-              nodeBorder:        '#7c3aed',
-              clusterBkg:        '#150f2a',
-              titleColor:        '#e2d9f3',
-              edgeLabelBackground:'#0f0a1e',
-              fontFamily: 'Outfit, Inter, system-ui, sans-serif',
-            },
+      themeVariables: getMermaidThemeVars(theme),
+      flowchart: { htmlLabels: true, curve: 'basis' },
     });
 
-    // Build click callback registration lines
-    const clickDefs = nodes
-      .map(n => {
-        const safeId = toNodeId(n.id);
-        return `  click ${safeId} archonNodeClick`;
-      })
-      .join('\n');
-
-    const def = buildMermaidDef(nodes, edges) + '\n' + clickDefs;
-
-    // Expose global click handler for mermaid's click API
+    // Register global click handler
     (window as any).archonNodeClick = (nodeId: string) => {
       const data = idToData.current[nodeId];
       if (data) onNodeClick(data);
     };
 
-    const uid = `mermaid-arch-${Date.now()}`;
+    const def = viewMode === 'overview'
+      ? buildOverviewDef(nodes, edges, arch)
+      : buildExpandedDef(nodes, edges);
+
+    const uid = `mermaid-${viewMode}-${Date.now()}`;
     try {
       const { svg } = await mermaid.render(uid, def);
       if (containerRef.current) {
         containerRef.current.innerHTML = svg;
-        // Make the SVG fill its parent nicely
         const svgEl = containerRef.current.querySelector('svg');
         if (svgEl) {
           svgEl.style.width = '100%';
-          svgEl.style.height = '100%';
-          svgEl.style.minHeight = '420px';
+          svgEl.style.height = 'auto';
+          svgEl.style.minHeight = '380px';
+          svgEl.style.maxHeight = viewMode === 'expanded' ? '800px' : '500px';
         }
       }
     } catch (err) {
-      console.error('Mermaid render error:', err);
+      console.error('[Mermaid] render error:', err);
       if (containerRef.current) {
         containerRef.current.innerHTML = `
-          <div style="padding:2rem;color:#ef4444;font-family:monospace;font-size:0.75rem;">
-            ⚠ Diagram render failed — too many nodes or cyclic dependency. 
-            Try analysing a smaller subgraph.<br/><pre>${String(err).slice(0, 300)}</pre>
+          <div style="padding:1.5rem;color:#ef4444;font-family:monospace;font-size:0.7rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:8px;margin:1rem;">
+            ⚠ Diagram render error — ${String(err).slice(0, 200)}
           </div>`;
       }
     }
-  }, [nodes, edges, theme, onNodeClick]);
+  }, [nodes, edges, arch, theme, viewMode, onNodeClick]);
 
   useEffect(() => {
     render();
@@ -172,17 +263,49 @@ export default function MermaidArchitecture({
 
   return (
     <div className="relative h-full w-full min-h-[420px] flex flex-col">
-      {/* Help banner */}
-      <div className="absolute top-4 left-4 z-10 bg-black/40 backdrop-blur-md border border-white/5 rounded-lg px-3 py-1.5 pointer-events-none">
-        <p className="text-[10px] text-gray-400 font-mono">
-          Click any file node to inspect source metrics and code structure.
-        </p>
+
+      {/* ── Toolbar ── */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+        {/* View toggle */}
+        <div className="flex rounded-lg border border-white/10 bg-black/50 backdrop-blur-md overflow-hidden">
+          <button
+            onClick={() => setViewMode('overview')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-semibold tracking-wide transition-colors ${
+              viewMode === 'overview'
+                ? 'bg-purple-500/20 text-purple-300 border-r border-purple-500/20'
+                : 'text-gray-500 hover:text-gray-300 border-r border-white/5'
+            }`}
+          >
+            <Layers className="h-3 w-3" />
+            Overview
+          </button>
+          <button
+            onClick={() => setViewMode('expanded')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-mono font-semibold tracking-wide transition-colors ${
+              viewMode === 'expanded'
+                ? 'bg-purple-500/20 text-purple-300'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <Network className="h-3 w-3" />
+            Expanded
+          </button>
+        </div>
+
+        {/* Context hint */}
+        <div className="bg-black/40 backdrop-blur-md border border-white/5 rounded-lg px-2.5 py-1.5">
+          <p className="text-[10px] text-gray-500 font-mono">
+            {viewMode === 'overview'
+              ? 'Directory-level architecture flow'
+              : `Top ${Math.min(40, nodes.length)} files by complexity · click to inspect`}
+          </p>
+        </div>
       </div>
 
-      {/* Diagram container — scroll both axes for large graphs */}
+      {/* ── Diagram ── */}
       <div
         ref={containerRef}
-        className="mermaid-wrapper flex-1 overflow-auto p-6 pt-12"
+        className="mermaid-wrapper flex-1 overflow-auto p-4 pt-14"
         style={{ minHeight: 420 }}
       />
     </div>

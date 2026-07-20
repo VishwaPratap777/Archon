@@ -229,6 +229,7 @@ export default function RepoDashboardPage() {
                   key={theme}
                   nodes={graph.nodes}
                   edges={graph.edges}
+                  arch={arch}
                   onNodeClick={handleNodeClick}
                 />
               </div>
