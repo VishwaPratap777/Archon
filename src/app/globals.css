@@ -1,41 +1,73 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DARK THEME (default) — Premium violet/slate canvas
+   ============================================================ */
 :root {
-  /* ── Premium Dark Theme ─────────────────────────────────────── */
-  --background:     #0a0d0f;   /* Deep charcoal canvas            */
-  --bg-surface:     #111518;   /* Slightly lighter surface        */
-  --card-bg:        rgba(18, 22, 26, 0.85); /* Glass card panel   */
+  --background:     #0a0d0f;
+  --bg-surface:     #111518;
+  --card-bg:        rgba(18, 22, 26, 0.85);
   --card-border:    rgba(255, 255, 255, 0.07);
 
-  /* Text hierarchy */
-  --text-primary:   #f1f5f9;   /* Near-white headings             */
-  --text-secondary: #94a3b8;   /* Slate-400 body text             */
-  --text-muted:     #475569;   /* Slate-600 captions              */
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:     #475569;
 
-  /* Brand gradient: violet → blue */
-  --primary:        #8b5cf6;   /* Violet-500                      */
+  --primary:        #8b5cf6;
   --primary-glow:   rgba(139, 92, 246, 0.12);
-  --secondary:      #3b82f6;   /* Blue-500                        */
+  --secondary:      #3b82f6;
   --secondary-glow: rgba(59, 130, 246, 0.10);
-  --accent:         #06b6d4;   /* Cyan-500 highlights             */
+  --accent:         #06b6d4;
 
-  /* Borders */
   --border-light:   rgba(255, 255, 255, 0.06);
   --border-medium:  rgba(255, 255, 255, 0.12);
 
-  /* Typography */
+  /* Nav */
+  --nav-bg:         #273338;
+  --nav-border:     rgba(255, 255, 255, 0.10);
+  --nav-text:       rgba(255, 255, 255, 0.70);
+  --nav-btn-bg:     #faf8f4;
+  --nav-btn-text:   #273338;
+
   --font-sans: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
   --font-mono: "JetBrains Mono", var(--font-geist-mono), "Courier New", monospace;
 
-  /* Easing curves (Emil Kowalski philosophy) */
-  --ease-out:              cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out:           cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-drawer:           cubic-bezier(0.32, 0.72, 0, 1);
-  --ease-out-premium:      cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out:        cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:     cubic-bezier(0.32, 0.72, 0, 1);
 
   --transition-fast:   160ms var(--ease-out);
   --transition-medium: 260ms var(--ease-out);
   --transition-slow:   400ms var(--ease-out);
+}
+
+/* ============================================================
+   LIGHT THEME — High-contrast editorial green/cream
+   ============================================================ */
+html.light {
+  --background:     #f5f2ec;
+  --bg-surface:     #ede9e0;
+  --card-bg:        rgba(255, 251, 244, 0.92);
+  --card-border:    rgba(43, 87, 72, 0.12);
+
+  --text-primary:   #1a2820;
+  --text-secondary: #374151;
+  --text-muted:     #6b7280;
+
+  --primary:        #2b5748;
+  --primary-glow:   rgba(43, 87, 72, 0.10);
+  --secondary:      #3d7a63;
+  --secondary-glow: rgba(61, 122, 99, 0.08);
+  --accent:         #618764;
+
+  --border-light:   rgba(43, 87, 72, 0.08);
+  --border-medium:  rgba(43, 87, 72, 0.18);
+
+  --nav-bg:         #273338;
+  --nav-border:     rgba(255, 255, 255, 0.10);
+  --nav-text:       rgba(255, 255, 255, 0.70);
+  --nav-btn-bg:     #faf8f4;
+  --nav-btn-text:   #273338;
 }
 
 @theme inline {
@@ -48,12 +80,29 @@
 /* ============================================================
    BASE & RESET
    ============================================================ */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-html {
-  color-scheme: dark;
+html { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+/* Smooth theme transitions on everything that visually changes */
+body,
+.glass-panel,
+.premium-input,
+main,
+section,
+aside,
+header,
+footer,
+nav,
+[class*="bg-"],
+[class*="text-"],
+[class*="border-"] {
+  transition:
+    background-color 300ms var(--ease-out),
+    color            300ms var(--ease-out),
+    border-color     300ms var(--ease-out),
+    box-shadow       300ms var(--ease-out);
 }
 
 body {
@@ -65,8 +114,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle radial glow behind the whole canvas */
-body::before {
+/* Ambient glow — dark mode only */
+html:not(.light) body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -81,8 +130,7 @@ body::before {
    NOISE GRAIN OVERLAY
    ============================================================ */
 .noise-overlay {
-  position: fixed;
-  top: 0; left: 0;
+  position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
@@ -90,36 +138,34 @@ body::before {
 }
 
 /* ============================================================
-   PREMIUM MICRO-INTERACTIONS
+   PRESSABLE MICRO-INTERACTION
    ============================================================ */
 .pressable-btn {
   transition:
-    transform var(--transition-fast),
+    transform      var(--transition-fast),
     background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    opacity var(--transition-fast),
-    box-shadow var(--transition-fast);
+    border-color   var(--transition-fast),
+    opacity        var(--transition-fast),
+    box-shadow     var(--transition-fast);
 }
-.pressable-btn:active {
-  transform: scale(0.97);
-}
+.pressable-btn:active { transform: scale(0.97); }
 
 /* ============================================================
-   GLASSMORPHISM PANEL  (dark-optimised)
+   GLASSMORPHISM PANEL
    ============================================================ */
 .glass-panel {
   background: var(--card-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--card-border);
-  transition:
-    border-color var(--transition-medium),
-    box-shadow  var(--transition-medium),
-    transform   var(--transition-medium);
 }
 .glass-panel:hover {
-  border-color: rgba(139, 92, 246, 0.15);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.18);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(139, 92, 246, 0.05);
+}
+html.light .glass-panel:hover {
+  border-color: rgba(43, 87, 72, 0.25);
+  box-shadow: 0 8px 32px rgba(43, 87, 72, 0.08);
 }
 
 /* ============================================================
@@ -132,14 +178,16 @@ body::before {
   color: var(--text-primary);
   padding: 0.625rem 0.875rem;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.premium-input::placeholder {
-  color: var(--text-muted);
-}
+html.light .premium-input { background: rgba(255, 255, 255, 0.7); }
+.premium-input::placeholder { color: var(--text-muted); }
 .premium-input:focus {
   border-color: rgba(139, 92, 246, 0.5);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+html.light .premium-input:focus {
+  border-color: rgba(43, 87, 72, 0.5);
+  box-shadow: 0 0 0 3px rgba(43, 87, 72, 0.1);
 }
 
 /* ============================================================
@@ -149,6 +197,8 @@ body::before {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.55); }
+html.light ::-webkit-scrollbar-thumb { background: rgba(43, 87, 72, 0.25); }
+html.light ::-webkit-scrollbar-thumb:hover { background: rgba(43, 87, 72, 0.45); }
 
 /* ============================================================
    CUSTOM CURSOR
@@ -185,15 +235,9 @@ body::before {
    ENTRY ANIMATIONS
    ============================================================ */
 .fade-in-up {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
-  @starting-style { opacity: 0; transform: translateY(18px); }
-}
-
-.fade-in-up-stagger {
   opacity: 1; transform: translateY(0);
   transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+  @starting-style { opacity: 0; transform: translateY(18px); }
 }
 
 /* ============================================================
@@ -213,14 +257,58 @@ body::before {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ============================================================
-   SLIDE-IN ANIMATION (Architecture drawer)
+   MERMAID DIAGRAM OVERRIDES
    ============================================================ */
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+.mermaid-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  min-height: 400px;
+  border-radius: 0.5rem;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.995); }
-  to   { opacity: 0.55; transform: scale(1); }
+/* Clickable node cursor */
+.mermaid-wrapper .node { cursor: pointer; }
+.mermaid-wrapper .node rect,
+.mermaid-wrapper .node circle,
+.mermaid-wrapper .node polygon {
+  transition: filter 150ms ease, opacity 150ms ease;
+}
+.mermaid-wrapper .node:hover rect,
+.mermaid-wrapper .node:hover circle,
+.mermaid-wrapper .node:hover polygon {
+  filter: brightness(1.25);
+  opacity: 0.9;
+}
+
+/* ============================================================
+   THEME TOGGLE BUTTON
+   ============================================================ */
+.theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color     200ms ease,
+    color            200ms ease,
+    transform        120ms ease;
+}
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.theme-toggle:active { transform: scale(0.93); }
+
+html.light .theme-toggle {
+  border-color: rgba(43, 87, 72, 0.25);
+  background:   rgba(43, 87, 72, 0.07);
+  color:        #2b5748;
+}
+html.light .theme-toggle:hover {
+  background: rgba(43, 87, 72, 0.14);
+  color:      #1a2820;
 }

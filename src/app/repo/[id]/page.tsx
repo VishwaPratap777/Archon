@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Navigation from '@/components/Navigation';
+import { useTheme } from '@/lib/ThemeContext';
 import {
   Layers,
   Compass,
@@ -27,13 +28,13 @@ import {
   Shield,
 } from 'lucide-react';
 
-const ArchitectureGraph = dynamic(() => import('@/components/ArchitectureGraph'), {
+const MermaidArchitecture = dynamic(() => import('@/components/MermaidArchitecture'), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full min-h-[500px] items-center justify-center rounded-xl bg-black/20 border border-white/5">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
-        <p className="text-sm text-gray-500 font-mono">Drawing architecture nodes and edges...</p>
+        <p className="text-sm text-gray-500 font-mono">Drawing architecture diagram...</p>
       </div>
     </div>
   )
@@ -79,6 +80,7 @@ export default function RepoDashboardPage() {
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [fileContent, setFileContent] = useState<string>('');
+  const { theme } = useTheme();
 
   useEffect(() => {
     async function fetchRepoDetails() {
@@ -223,7 +225,12 @@ export default function RepoDashboardPage() {
             <div className="flex-1 flex flex-col lg:flex-row min-h-[600px]">
               {/* Graph pane */}
               <div className="flex-1 relative min-h-[420px]">
-                <ArchitectureGraph nodes={graph.nodes} edges={graph.edges} onNodeClick={handleNodeClick} />
+                <MermaidArchitecture
+                  key={theme}
+                  nodes={graph.nodes}
+                  edges={graph.edges}
+                  onNodeClick={handleNodeClick}
+                />
               </div>
 
               {/* Right panel — file detail OR arch assessment */}

@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Sun, Moon } from 'lucide-react';
 import FlipLink from '@/components/ui/FlipLink';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,8 +67,24 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Desktop Button (Right) */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Desktop Right: Theme Toggle + CTA */}
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <motion.span
+                key={theme}
+                initial={{ rotate: -30, opacity: 0, scale: 0.7 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                {theme === 'dark'
+                  ? <Sun className="h-3.5 w-3.5" />
+                  : <Moon className="h-3.5 w-3.5" />}
+              </motion.span>
+            </button>
             <a
               href="#hold-to-unlock"
               className="pressable-btn text-[10px] font-mono tracking-widest uppercase text-[#273338] bg-[#faf8f4] hover:bg-white rounded-full px-4.5 py-1.8 flex items-center gap-1.5 font-semibold"
@@ -110,6 +128,13 @@ export default function Navigation() {
             </div>
 
             <div className="flex flex-col gap-4">
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-white/10 py-2.5 text-xs font-mono tracking-widest uppercase text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </button>
               <a
                 href="#hold-to-unlock"
                 onClick={() => setIsOpen(false)}
