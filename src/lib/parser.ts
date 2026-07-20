@@ -20,7 +20,7 @@ const EXTENSION_TO_LANG_WASM: Record<string, string> = {
 async function initParser() {
   if (parserInitialized) return;
   
-  const wasmPath = path.join(process.cwd(), 'node_modules', 'web-tree-sitter', 'tree-sitter.wasm');
+  const wasmPath = path.join(process.cwd(), 'node_modules', 'web-tree-sitter', 'web-tree-sitter.wasm');
   
   await TreeSitter.Parser.init({
     locateFile() {
