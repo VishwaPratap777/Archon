@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { useAuth } from '@/lib/AuthContext';
 import { 
   GitBranch, 
   Terminal, 
@@ -19,6 +20,8 @@ function AnalyzeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const repoIdFromQuery = searchParams.get('id');
+
+  const { authFetch, refreshUser } = useAuth();
 
   const [githubUrl, setGithubUrl] = useState('');
   const [activeJobId, setActiveJobId] = useState<string | null>(repoIdFromQuery);
@@ -44,7 +47,7 @@ function AnalyzeContent() {
 
         try {
           const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-          const res = await fetch(`${API_BASE}/api/repos`, {
+          const res = await authFetch(`${API_BASE}/api/repos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ githubUrl: urlFromQuery }),
@@ -84,7 +87,9 @@ function AnalyzeContent() {
         setLogs(data.logs || []);
 
         if (data.status === 'completed' || data.status === 'failed') {
-          // Stop polling
+          if (data.status === 'completed') {
+            refreshUser();
+          }
           return;
         }
 
@@ -119,7 +124,7 @@ function AnalyzeContent() {
 
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API_BASE}/api/repos`, {
+      const res = await authFetch(`${API_BASE}/api/repos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ githubUrl }),
