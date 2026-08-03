@@ -12,13 +12,21 @@ import fs from 'fs';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface AstSymbolSubNode {
+  type: string;
+  startLine: number;
+  endLine: number;
+  code: string;
+}
+
 export interface AstSymbol {
   name: string;
-  type: 'function' | 'class' | 'component' | 'hook' | 'method' | 'exported_const';
+  type: 'function' | 'class' | 'component' | 'hook' | 'method' | 'exported_const' | 'interface' | 'enum' | 'type_alias';
   startLine: number;
   endLine: number;
   code: string;
   parentSymbol?: string;
+  subNodes?: AstSymbolSubNode[];
 }
 
 export interface ParsedFileInfo {
@@ -281,6 +289,41 @@ function traverse(node: TreeSitter.Node, result: ParsedFileInfo, content: string
     }
   }
 
+function extractAstSubNodes(node: TreeSitter.Node): AstSymbolSubNode[] {
+  const subNodes: AstSymbolSubNode[] = [];
+
+  function collect(n: TreeSitter.Node) {
+    if (n.id === node.id) {
+      for (let i = 0; i < n.childCount; i++) {
+        const c = n.child(i);
+        if (c) collect(c);
+      }
+      return;
+    }
+    const t = n.type;
+    if (
+      t === 'if_statement' || t === 'switch_statement' || t === 'try_statement' ||
+      t === 'for_statement' || t === 'for_in_statement' || t === 'while_statement' ||
+      t === 'method_definition' || t === 'function_declaration' || t === 'arrow_function'
+    ) {
+      subNodes.push({
+        type: t,
+        startLine: n.startPosition.row + 1,
+        endLine: n.endPosition.row + 1,
+        code: n.text,
+      });
+      return;
+    }
+    for (let i = 0; i < n.childCount; i++) {
+      const c = n.child(i);
+      if (c) collect(c);
+    }
+  }
+
+  collect(node);
+  return subNodes;
+}
+
   // ── Functions ──
   let currentParent = parentSymbol;
   if (
@@ -305,6 +348,7 @@ function traverse(node: TreeSitter.Node, result: ParsedFileInfo, content: string
         endLine: node.endPosition.row + 1,
         code: node.text,
         parentSymbol,
+        subNodes: extractAstSubNodes(node),
       });
     }
   }
@@ -330,6 +374,7 @@ function traverse(node: TreeSitter.Node, result: ParsedFileInfo, content: string
             endLine: node.endPosition.row + 1,
             code: node.text,
             parentSymbol,
+            subNodes: extractAstSubNodes(node),
           });
         } else if (isExported) {
           result.symbols.push({
@@ -339,6 +384,7 @@ function traverse(node: TreeSitter.Node, result: ParsedFileInfo, content: string
             endLine: node.endPosition.row + 1,
             code: node.text,
             parentSymbol,
+            subNodes: extractAstSubNodes(node),
           });
         }
       }
@@ -358,18 +404,52 @@ function traverse(node: TreeSitter.Node, result: ParsedFileInfo, content: string
         endLine: node.endPosition.row + 1,
         code: node.text,
         parentSymbol,
+        subNodes: extractAstSubNodes(node),
       });
     }
   }
 
-  // ── Interfaces & Type Aliases (TypeScript) ──
+  // ── Interfaces & Type Aliases & Enums (TypeScript) ──
   if (type === 'interface_declaration') {
     const name = node.childForFieldName('name')?.text;
-    if (name) result.interfaces.push(name);
+    if (name) {
+      result.interfaces.push(name);
+      result.symbols.push({
+        name,
+        type: 'interface',
+        startLine: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        code: node.text,
+        parentSymbol,
+      });
+    }
   }
   if (type === 'type_alias_declaration') {
     const name = node.childForFieldName('name')?.text;
-    if (name) result.interfaces.push(name);
+    if (name) {
+      result.interfaces.push(name);
+      result.symbols.push({
+        name,
+        type: 'type_alias',
+        startLine: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        code: node.text,
+        parentSymbol,
+      });
+    }
+  }
+  if (type === 'enum_declaration') {
+    const name = node.childForFieldName('name')?.text;
+    if (name) {
+      result.symbols.push({
+        name,
+        type: 'enum',
+        startLine: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        code: node.text,
+        parentSymbol,
+      });
+    }
   }
 
   // ── Environment variables: process.env.XXX ──

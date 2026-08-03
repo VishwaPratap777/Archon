@@ -117,7 +117,7 @@ export default function Hero() {
         </p>
 
         {/* Premium Input Bar Capsule */}
-        <div className="hero-input-bar opacity-0 -mt-2.5 w-full max-w-md flex flex-col items-center gap-4">
+        <div className="hero-input-bar opacity-0 mt-4 w-full max-w-md flex flex-col items-center gap-4">
           <form
             onSubmit={handleStartAnalysis}
             className="w-full flex items-center justify-between p-1.5 rounded-2xl border border-black/8 bg-white/70 backdrop-blur-md shadow-lg shadow-black/[0.03] transition-all focus-within:border-[#618764] focus-within:shadow-[#618764]/5 focus-within:shadow-md"

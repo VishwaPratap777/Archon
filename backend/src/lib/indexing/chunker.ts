@@ -11,7 +11,7 @@
 
 import { Document } from '@langchain/core/documents';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { ParsedFileInfo } from './parser';
+import { ParsedFileInfo, AstSymbol } from './parser';
 import { FileSummary, RepoSummary } from './summarizer';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -38,9 +38,72 @@ const codeSplitter = new RecursiveCharacterTextSplitter({
 });
 
 /**
+ * Splits oversized symbols strictly along internal AST node/block boundaries.
+ * Keeps scope headers intact and NEVER splits mid-statement or mid-line.
+ */
+function splitSymbolByAstBoundaries(
+  header: string,
+  sym: AstSymbol,
+  metadata: ChunkMetadata,
+  maxChars: number = 2500
+): Document[] {
+  const fullText = header + sym.code;
+  if (fullText.length <= maxChars) {
+    return [new Document({ pageContent: fullText, metadata: metadata as any })];
+  }
+
+  const docs: Document[] = [];
+  // If AST subNodes exist (methods, control flow blocks, nested functions), group by sub-nodes
+  if (sym.subNodes && sym.subNodes.length > 0) {
+    let currentChunkCode = '';
+    for (const sub of sym.subNodes) {
+      if (currentChunkCode.length + sub.code.length > maxChars && currentChunkCode.length > 0) {
+        docs.push(new Document({
+          pageContent: header + currentChunkCode,
+          metadata: { ...metadata } as any,
+        }));
+        currentChunkCode = sub.code;
+      } else {
+        currentChunkCode += (currentChunkCode ? '\n\n' : '') + sub.code;
+      }
+    }
+    if (currentChunkCode.length > 0) {
+      docs.push(new Document({
+        pageContent: header + currentChunkCode,
+        metadata: { ...metadata } as any,
+      }));
+    }
+    return docs;
+  }
+
+  // Pure line-level AST boundary fallback (never cuts mid-line)
+  const lines = sym.code.split('\n');
+  let currentChunk = '';
+  for (const line of lines) {
+    if (currentChunk.length + line.length > maxChars && currentChunk.length > 0) {
+      docs.push(new Document({
+        pageContent: header + currentChunk,
+        metadata: { ...metadata } as any,
+      }));
+      currentChunk = line;
+    } else {
+      currentChunk += (currentChunk ? '\n' : '') + line;
+    }
+  }
+  if (currentChunk.length > 0) {
+    docs.push(new Document({
+      pageContent: header + currentChunk,
+      metadata: { ...metadata } as any,
+    }));
+  }
+
+  return docs;
+}
+
+/**
  * AST-Aware Code Chunking:
- * Creates one chunk per AST symbol (function, class, component, hook, method, exported_const).
- * Falls back to character chunking if AST parsing failed or returned 0 symbols.
+ * Creates one chunk per AST symbol (function, class, component, hook, method, interface, enum, type_alias, exported_const).
+ * Splits oversized symbols strictly along internal AST node boundaries.
  */
 export async function chunkCodeAST(
   repositoryId: string,
@@ -59,8 +122,8 @@ export async function chunkCodeAST(
   const ext = filePath.split('.').pop() || '';
 
   for (const sym of parsed.symbols) {
-    const header = `// File: ${filePath}\n// Symbol: ${sym.name} (${sym.type})${sym.parentSymbol ? ` [Parent: ${sym.parentSymbol}]` : ''} [Lines ${sym.startLine}-${sym.endLine}]\n`;
-    const fullText = header + sym.code;
+    const scopeName = sym.parentSymbol ? `${sym.parentSymbol}.${sym.name}` : sym.name;
+    const header = `// File: ${filePath}\n// Scope: ${scopeName} (${sym.type}) [Lines ${sym.startLine}-${sym.endLine}]\n`;
 
     const metadata: ChunkMetadata = {
       repositoryId,
@@ -75,13 +138,9 @@ export async function chunkCodeAST(
       keywords: [sym.name, sym.type, ...(sym.parentSymbol ? [sym.parentSymbol] : [])],
     };
 
-    // Preserve full AST symbol up to 2500 chars max (~40 lines of code)
-    if (fullText.length > 2500) {
-      const splitDocs = await codeSplitter.createDocuments([fullText], [metadata]);
-      docs.push(...splitDocs);
-    } else {
-      docs.push(new Document({ pageContent: fullText, metadata: metadata as any }));
-    }
+    // Split strictly at AST boundaries
+    const symbolDocs = splitSymbolByAstBoundaries(header, sym, metadata, 2500);
+    docs.push(...symbolDocs);
   }
 
   return docs;

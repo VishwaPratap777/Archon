@@ -250,7 +250,7 @@ export default function RepoDashboardPage() {
       <div className="mx-auto w-full max-w-7xl flex-1 px-6 py-8 flex flex-col md:flex-row gap-6">
 
         {/* Tab Sidebar */}
-        <aside className="w-full md:w-52 shrink-0 flex flex-row md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+        <aside className="w-full md:w-52 shrink-0 flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
           {[
             { id: 'architecture', label: 'Architecture',   icon: Layers      },
             { id: 'onboarding',   label: 'Onboarding',     icon: Compass     },

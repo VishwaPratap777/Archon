@@ -92,7 +92,7 @@ export default function AuthModal() {
           </div>
 
           {/* Tab Switcher */}
-          <div className="mb-6 flex rounded-xl bg-black/20 p-1 border border-white/5">
+          <div className="mb-6 flex gap-1 rounded-xl bg-black/20 p-1 border border-white/5">
             <button
               type="button"
               onClick={() => {
