@@ -144,6 +144,19 @@ class MockCollection {
     const results = await this.find(query).toArray();
     return results.length;
   }
+
+  async bulkWrite(operations: any[]) {
+    for (const op of operations) {
+      if (op.updateOne) {
+        await this.updateOne(op.updateOne.filter, op.updateOne.update, { upsert: op.updateOne.upsert });
+      } else if (op.insertOne) {
+        await this.insertOne(op.insertOne.document);
+      } else if (op.deleteMany) {
+        await this.deleteMany(op.deleteMany.filter);
+      }
+    }
+    return { ok: 1 };
+  }
 }
 
 class MockDb {

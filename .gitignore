@@ -36,3 +36,8 @@ yarn-error.log*
 # TS
 *.tsbuildinfo
 next-env.d.ts
+
+# Scratch & Temporary Test Files
+scratch/
+**/scratch/
+test_keys.ts

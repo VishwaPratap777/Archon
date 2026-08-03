@@ -29,7 +29,6 @@ export default function Navigation() {
   const links = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/analyze', label: 'Analyze Repo' },
-    { href: '/settings', label: 'Settings' },
   ];
 
   const formatTokens = (num: number = 0) => {
