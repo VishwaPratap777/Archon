@@ -5,6 +5,8 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { ObjectId } from 'mongodb';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { connectToDatabase, getSettings } from './lib/db';
 import { parseGithubUrl, cloneRepository, walkRepository, parseGitCommits, cleanupRepoFolder } from './lib/git';
 import { parseSourceFile } from './lib/parser';
@@ -618,6 +620,48 @@ app.post('/api/settings', async (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to save settings' });
   }
+});
+
+// POST /api/settings/verify -> Verify API keys
+app.post('/api/settings/verify', async (req, res) => {
+  const { groqApiKey, openaiApiKey, anthropicApiKey } = req.body;
+  const results: any = {};
+
+  if (groqApiKey && !groqApiKey.includes('***')) {
+    try {
+      const groq = new OpenAI({ apiKey: groqApiKey, baseURL: 'https://api.groq.com/openai/v1' });
+      await groq.models.list();
+      results.groq = { status: 'success', message: 'Connected successfully!' };
+    } catch (e: any) {
+      results.groq = { status: 'error', message: e.message || 'Invalid key or rate limited.' };
+    }
+  }
+
+  if (openaiApiKey && !openaiApiKey.includes('***')) {
+    try {
+      const openai = new OpenAI({ apiKey: openaiApiKey });
+      await openai.models.list();
+      results.openai = { status: 'success', message: 'Connected successfully!' };
+    } catch (e: any) {
+      results.openai = { status: 'error', message: e.message || 'Invalid key.' };
+    }
+  }
+
+  if (anthropicApiKey && !anthropicApiKey.includes('***')) {
+    try {
+      const anthropic = new Anthropic({ apiKey: anthropicApiKey });
+      await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'test' }]
+      });
+      results.anthropic = { status: 'success', message: 'Connected successfully!' };
+    } catch (e: any) {
+      results.anthropic = { status: 'error', message: e.message || 'Invalid key.' };
+    }
+  }
+
+  res.json(results);
 });
 
 // Background Analysis Worker Task

@@ -16,6 +16,9 @@ export default function SettingsPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState('');
+  
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyResults, setVerifyResults] = useState<any>({});
 
   useEffect(() => {
     async function loadSettings() {
@@ -78,6 +81,33 @@ export default function SettingsPage() {
       setErrorMessage(err.message || 'An error occurred while saving.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    setIsVerifying(true);
+    setVerifyResults({});
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_BASE}/api/settings/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groqApiKey,
+          openaiApiKey,
+          anthropicApiKey,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setVerifyResults(data);
+      } else {
+        alert('Verification request failed.');
+      }
+    } catch (err: any) {
+      alert('Verification request failed: ' + err.message);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -179,6 +209,12 @@ export default function SettingsPage() {
                       onChange={(e) => setGroqApiKey(e.target.value)}
                       className="premium-input w-full font-mono text-sm border-purple-950/30 focus:border-purple-500/50"
                     />
+                    {verifyResults.groq && (
+                      <div className={`flex items-center gap-1.5 text-[11px] font-semibold mt-1 ${verifyResults.groq.status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {verifyResults.groq.status === 'success' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                        {verifyResults.groq.message}
+                      </div>
+                    )}
                     <p className="text-xs text-gray-400 leading-relaxed">
                       Groq acts as the **primary** high-speed engine for full AST parsing, complexity scoring, and running structural AI Agents with minimal latency.
                     </p>
@@ -200,6 +236,12 @@ export default function SettingsPage() {
                           onChange={(e) => setOpenaiApiKey(e.target.value)}
                           className="premium-input w-full font-mono text-xs"
                         />
+                        {verifyResults.openai && (
+                          <div className={`flex items-center gap-1.5 text-[10px] font-semibold mt-1 ${verifyResults.openai.status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {verifyResults.openai.status === 'success' ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                            {verifyResults.openai.message}
+                          </div>
+                        )}
                         <p className="mt-1 text-[11px] text-gray-500 leading-normal">
                           User optional. If configured, you can run the codebase with standard OpenAI models (GPT-4o-mini). Useful for quick local clones.
                         </p>
@@ -217,6 +259,12 @@ export default function SettingsPage() {
                           onChange={(e) => setAnthropicApiKey(e.target.value)}
                           className="premium-input w-full font-mono text-xs"
                         />
+                        {verifyResults.anthropic && (
+                          <div className={`flex items-center gap-1.5 text-[10px] font-semibold mt-1 ${verifyResults.anthropic.status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {verifyResults.anthropic.status === 'success' ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                            {verifyResults.anthropic.message}
+                          </div>
+                        )}
                         <p className="mt-1 text-[11px] text-gray-500 leading-normal">
                           Powers optional high-fidelity reasoning using Claude 3.5 Sonnet if Groq is unavailable.
                         </p>
@@ -245,6 +293,22 @@ export default function SettingsPage() {
                         Error
                       </span>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={handleVerify}
+                      disabled={isVerifying}
+                      className="px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isVerifying ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        'Verify Connections'
+                      )}
+                    </button>
                     
                     <button
                       type="submit"
