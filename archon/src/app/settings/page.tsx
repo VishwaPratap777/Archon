@@ -138,7 +138,7 @@ export default function SettingsPage() {
     <div className="flex min-h-screen flex-col bg-[var(--background)]">
       <Navigation />
       
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 pt-28 pb-12">
         <div className="fade-in-up">
           <div className="mb-10">
             <h1 className="text-3xl font-bold tracking-tight text-white">System Settings</h1>

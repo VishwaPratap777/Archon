@@ -201,7 +201,7 @@ export default function RepoDashboardPage() {
       <Navigation />
 
       {/* ── Repository Hero Header ─────────────────────────────── */}
-      <section className="border-b border-[var(--card-border)] bg-black/30 py-5">
+      <section className="border-b border-[var(--card-border)] bg-black/30 pt-24 pb-5">
         <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <button

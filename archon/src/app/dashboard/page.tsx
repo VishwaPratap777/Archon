@@ -80,7 +80,7 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[var(--background)]">
       <Navigation />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-12">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 pt-28 pb-12">
         <div className="fade-in-up">
           {/* Dashboard Header */}
           <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -83,7 +83,7 @@ export default function Hero() {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-[92vh] flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden px-6"
+      className="relative min-h-[92vh] flex flex-col items-center justify-center pt-36 pb-20 overflow-hidden px-6"
     >
       {/* Soft Sage & Forest Green ambient lights with spring-based mouse interpolation */}
       <motion.div
