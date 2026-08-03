@@ -33,8 +33,8 @@ export interface ChunkMetadata {
 // ─── Code Chunking ───────────────────────────────────────────────────────────
 
 const codeSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 450,
-  chunkOverlap: 80,
+  chunkSize: 1200,
+  chunkOverlap: 150,
 });
 
 /**
@@ -75,8 +75,8 @@ export async function chunkCodeAST(
       keywords: [sym.name, sym.type, ...(sym.parentSymbol ? [sym.parentSymbol] : [])],
     };
 
-    // Ensure chunk remains under embedding model's preferred size (~1200 chars max)
-    if (fullText.length > 1200) {
+    // Preserve full AST symbol up to 2500 chars max (~40 lines of code)
+    if (fullText.length > 2500) {
       const splitDocs = await codeSplitter.createDocuments([fullText], [metadata]);
       docs.push(...splitDocs);
     } else {

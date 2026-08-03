@@ -57,7 +57,7 @@ API: ${repoSummary.apiFlow || 'None detected'}`);
     const codeText = codeChunks
       .map(d => {
         const filePath = d.metadata?.path || 'unknown';
-        const content = d.pageContent.length > 500 ? d.pageContent.slice(0, 500) + '\n...[truncated]' : d.pageContent;
+        const content = d.pageContent.length > 2500 ? d.pageContent.slice(0, 2500) + '\n...[truncated]' : d.pageContent;
         return `--- ${filePath} ---\n${content}`;
       })
       .join('\n\n');

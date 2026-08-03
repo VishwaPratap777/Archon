@@ -49,7 +49,6 @@ const EXCLUDED_EXTENSIONS = new Set([
   '.wasm', '.dll', '.exe', '.so', '.dylib',
   '.db', '.sqlite', '.sqlite3',
   '.min.js', '.min.css', '.map',
-  '.txt', '.md', '.markdown', // Skip doc markdown files to save tokens on raw code
 ]);
 
 const MAX_FILE_SIZE = 200_000; // 200KB — skip anything larger
