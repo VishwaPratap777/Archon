@@ -30,6 +30,22 @@ function AnalyzeContent() {
   const [logs, setLogs] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
+
+  const LOADING_TIPS = [
+    "Tip: The default token limit for free accounts is 100,000 tokens.",
+    "Tip: You can clone this repository and supply your own API keys to bypass limits.",
+    "Tip: We use a Redis Vector Database to semantically search code snippets.",
+    "Tip: LangGraph powers our AI agents to traverse your architecture.",
+  ];
+
+  useEffect(() => {
+    if (!isSubmitting || jobStatus === 'completed' || jobStatus === 'failed') return;
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % LOADING_TIPS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isSubmitting, jobStatus]);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -240,13 +256,18 @@ function AnalyzeContent() {
                   <span className="text-2xl font-bold text-gray-300 font-mono">{progress}%</span>
                 </div>
 
-                {/* Progress Bar */}
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${getProgressColor()}`}
                     style={{ width: `${progress}%` }}
                   />
                 </div>
+                
+                {jobStatus !== 'completed' && jobStatus !== 'failed' && (
+                  <div className="pt-2 text-center text-xs text-gray-400 italic h-6 fade-in transition-opacity">
+                    {LOADING_TIPS[tipIndex]}
+                  </div>
+                )}
 
                 {/* Completion CTA */}
                 {jobStatus === 'completed' && (

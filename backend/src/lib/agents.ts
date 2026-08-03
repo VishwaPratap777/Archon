@@ -123,14 +123,75 @@ async function callLLM(prompt: string, systemPrompt: string): Promise<LlmResult>
 }
 
 export async function runArchitectureAgent(ctx: RepositoryContext): Promise<any> {
-  const systemPrompt = `You are a Principal Software Architect. Analyze the repository structure and import paths to synthesize system design insights. Return a JSON object with:
-  {
-    "summary": "High level architecture style description",
-    "layers": ["Layer name 1: description", "Layer name 2: description"],
-    "circularDependencies": ["Warning/details of circular imports"],
-    "designPatterns": ["List of patterns detected (e.g. Singleton, MVC, Repository)"],
-    "recommendations": ["Architectural improvement advice"]
-  }`;
+  const systemPrompt = `You are an expert software architect.
+
+Below are structured summaries of every file in a repository.
+
+Your task is to build a complete understanding of the project.
+
+Produce ONLY valid JSON.
+
+{
+  "project_name": "",
+  "description": "",
+
+  "tech_stack": [],
+
+  "frontend": {
+    "framework": "",
+    "routing": "",
+    "state_management": [],
+    "ui": []
+  },
+
+  "backend": {
+    "framework": "",
+    "architecture": "",
+    "api_style": ""
+  },
+
+  "authentication": {
+    "provider": "",
+    "how_it_works": ""
+  },
+
+  "database": {
+    "provider": "",
+    "orm": "",
+    "main_models": []
+  },
+
+  "external_services": [],
+
+  "caching": [],
+
+  "queueing": [],
+
+  "ai_services": [],
+
+  "major_features": [],
+
+  "folder_purposes": {
+    "/app": "",
+    "/components": "",
+    "/lib": "",
+    "/api": ""
+  },
+
+  "important_files": [
+    {
+      "path": "",
+      "reason": ""
+    }
+  ],
+
+  "architecture_summary": "",
+
+  "developer_notes": [
+    "...",
+    "..."
+  ]
+}`;
 
   const prompt = `Here is the codebase structure for "${ctx.name}":
   Frameworks detected: ${ctx.frameworks.join(', ')}
@@ -154,14 +215,34 @@ export async function runArchitectureAgent(ctx: RepositoryContext): Promise<any>
     console.warn('Falling back to mock Architecture assessment', e);
     const entryPoints = ctx.files.filter(f => f.path.match(/(index|server|app|main)\.(ts|js|go|py)$/i)).map(f => f.path);
     return {
-      summary: `A ${ctx.frameworks[0] || 'Node.js'} based repository structured with modular layers. Key entry point is likely ${entryPoints[0] || 'main file'}.`,
-      layers: [
-        `Entry layer: Coordinates startup, configurations, and exports. Includes ${entryPoints.join(', ') || 'root files'}.`,
-        `Core logic: Houses utilities and service modules, parsed with average code complexity of ${(ctx.files.reduce((a,b)=>a+b.complexity, 0)/Math.max(ctx.files.length, 1)).toFixed(1)}.`
-      ],
-      circularDependencies: detectCircularDependenciesMock(ctx.files),
-      designPatterns: ctx.frameworks.includes('Next.js') ? ['React App Router Architecture', 'Server Actions / API Handlers'] : ['Modular Functional Architecture'],
-      recommendations: ['Keep complexity low by refactoring long modules (>150 LOC)', 'Ensure logical isolation between entry components and utilities.']
+      project_name: ctx.name,
+      description: `A ${ctx.frameworks[0] || 'Node.js'} based repository. Entry point is likely ${entryPoints[0] || 'main file'}.`,
+      tech_stack: ctx.frameworks,
+      frontend: {
+        framework: ctx.frameworks.includes('Next.js') ? 'Next.js' : (ctx.frameworks.includes('React') ? 'React' : 'Unknown'),
+        routing: 'Unknown',
+        state_management: [],
+        ui: []
+      },
+      backend: {
+        framework: 'Unknown',
+        architecture: 'Modular Functional Architecture',
+        api_style: 'REST/Unknown'
+      },
+      authentication: { provider: 'None', how_it_works: 'N/A' },
+      database: { provider: 'None', orm: 'None', main_models: [] },
+      external_services: [],
+      caching: [],
+      queueing: [],
+      ai_services: [],
+      major_features: [],
+      folder_purposes: {},
+      important_files: entryPoints.map(p => ({ path: p, reason: 'Entry point of the application' })),
+      architecture_summary: `Average code complexity of ${(ctx.files.reduce((a,b)=>a+b.complexity, 0)/Math.max(ctx.files.length, 1)).toFixed(1)}.`,
+      developer_notes: [
+        'Keep complexity low by refactoring long modules (>150 LOC)',
+        'Ensure logical isolation between entry components and utilities.'
+      ]
     };
   }
 }
@@ -460,11 +541,26 @@ export async function runHistoryAgent(ctx: RepositoryContext): Promise<any> {
   }
 }
 export async function runChatAgent(ctx: RepositoryContext, query: string): Promise<any> {
-  const systemPrompt = `You are a Repository Intelligence Chatbot. You answer questions about a codebase based on the provided file metadata, architecture, and specifically RETRIEVED SOURCE CODE CHUNKS.
-CRITICAL INSTRUCTIONS:
-1. You now have access to actual source code snippets retrieved from a Redis Vector Database. Read the "Retrieved Code Context" carefully.
-2. Base your answers firmly on both the architectural metadata and the retrieved source code.
-3. Return a JSON object with:
+  const systemPrompt = `You are a repository expert.
+
+You have access to:
+1. Repository architecture summary
+2. Folder summaries
+3. File summaries
+4. Retrieved source code
+5. AST metadata
+
+When answering:
+- Prefer repository facts over guessing.
+- Combine information from multiple files when needed.
+- Mention the exact files supporting your answer.
+- If authentication/database/API logic spans multiple files, explain how they connect.
+- Never hallucinate missing code.
+- If the repository does not contain enough evidence, explicitly say so.
+- When possible, include file paths, exported functions, components, and important dependencies.
+
+CRITICAL FORMATTING INSTRUCTION:
+Return ONLY a valid JSON object with the following structure:
   {
     "answer": "Your detailed answer to the user's question, formatted in markdown."
   }`;

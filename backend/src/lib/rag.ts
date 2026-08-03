@@ -4,13 +4,36 @@ import { RedisVectorStore } from '@langchain/redis';
 import { createClient } from 'redis';
 import { Embeddings } from '@langchain/core/embeddings';
 
-// Mock Embeddings for fallback when API key is missing
-class MockEmbeddings extends Embeddings {
-  async embedDocuments(texts: string[]): Promise<number[][]> {
-    return texts.map(() => Array(1536).fill(0.1));
+// @ts-ignore
+import { pipeline } from '@xenova/transformers';
+
+class LocalEmbeddings extends Embeddings {
+  private extractor: any = null;
+
+  constructor(params?: any) {
+    super(params ?? {});
   }
+
+  async init() {
+    if (!this.extractor) {
+      this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    }
+  }
+
+  async embedDocuments(texts: string[]): Promise<number[][]> {
+    await this.init();
+    const results: number[][] = [];
+    for (const text of texts) {
+      const output = await this.extractor(text, { pooling: 'mean', normalize: true });
+      results.push(Array.from(output.data) as number[]);
+    }
+    return results;
+  }
+
   async embedQuery(text: string): Promise<number[]> {
-    return Array(1536).fill(0.1);
+    await this.init();
+    const output = await this.extractor(text, { pooling: 'mean', normalize: true });
+    return Array.from(output.data) as number[];
   }
 }
 
@@ -21,7 +44,13 @@ export async function getRedisClient() {
   if (redisClient && isRedisConnected) return redisClient;
   
   const url = process.env.REDIS_URI || 'redis://localhost:6379';
-  redisClient = createClient({ url });
+  redisClient = createClient({ 
+    url,
+    socket: {
+      connectTimeout: 3000,
+      reconnectStrategy: false // fail fast if Redis is down
+    }
+  });
 
   redisClient.on('error', (err) => {
     console.warn('[Redis] Connection Error:', err.message);
@@ -41,11 +70,10 @@ export async function getRedisClient() {
 }
 
 export function getEmbeddingsModel() {
-  if (process.env.OPENAI_API_KEY) {
+  if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && !process.env.OPENAI_API_KEY.startsWith('sk-s0c')) {
     return new OpenAIEmbeddings({ modelName: 'text-embedding-3-small' });
   }
-  console.warn('[RAG] OPENAI_API_KEY not found. Falling back to Mock Embeddings.');
-  return new MockEmbeddings({ maxRetries: 0 });
+  return new LocalEmbeddings();
 }
 
 /**

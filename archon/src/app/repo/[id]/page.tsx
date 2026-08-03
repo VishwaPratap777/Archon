@@ -27,6 +27,12 @@ import {
   TrendingUp,
   Shield,
   MessageSquare,
+  Monitor,
+  Server,
+  Database,
+  Key,
+  FileText,
+  Layout,
   Send
 } from 'lucide-react';
 
@@ -356,62 +362,111 @@ export default function RepoDashboardPage() {
                       </p>
                     </div>
 
-                    {arch.summary ? (
+                    {arch.description ? (
                       <div className="bg-purple-500/5 border border-purple-500/15 rounded-lg p-4">
-                        <p className="text-xs text-gray-300 leading-relaxed">{arch.summary}</p>
+                        <p className="text-xs text-gray-300 leading-relaxed"><span className="font-bold text-purple-300">{arch.project_name}</span>: {arch.description}</p>
                       </div>
                     ) : (
                       <EmptyState msg="No architecture summary generated. Add an AI API key in Settings." />
                     )}
 
-                    {arch.layers?.length > 0 && (
+                    {arch.tech_stack?.length > 0 && (
                       <div>
-                        <SectionHeading icon={Layers} label="System Layers" />
-                        <ul className="space-y-2">
-                          {arch.layers.map((l: string, i: number) => (
-                            <li key={i} className="flex gap-2 text-xs text-gray-300 leading-relaxed">
-                              <span className="text-purple-400 font-mono font-bold shrink-0">{i + 1}.</span>
-                              <span>{l}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {arch.designPatterns?.length > 0 && (
-                      <div>
-                        <SectionHeading icon={GitCommit} label="Design Patterns" />
+                        <SectionHeading icon={Layers} label="Tech Stack" />
                         <div className="flex flex-wrap gap-1.5">
-                          {arch.designPatterns.map((p: string) => (
-                            <span key={p} className="inline-flex rounded bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-300">
-                              {p}
+                          {arch.tech_stack.map((stackItem: string) => (
+                            <span key={stackItem} className="inline-flex rounded bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-300">
+                              {stackItem}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {arch.circularDependencies?.length > 0 && (
+                    {arch.frontend?.framework && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Monitor className="h-3.5 w-3.5 text-pink-400" />
+                            <h4 className="text-xs font-bold text-white">Frontend</h4>
+                          </div>
+                          <ul className="space-y-1 text-[10px] text-gray-400">
+                            <li><span className="text-gray-500">Framework:</span> {arch.frontend.framework}</li>
+                            <li><span className="text-gray-500">Routing:</span> {arch.frontend.routing}</li>
+                            <li><span className="text-gray-500">State:</span> {arch.frontend.state_management?.join(', ') || 'N/A'}</li>
+                            <li><span className="text-gray-500">UI:</span> {arch.frontend.ui?.join(', ') || 'N/A'}</li>
+                          </ul>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Server className="h-3.5 w-3.5 text-blue-400" />
+                            <h4 className="text-xs font-bold text-white">Backend</h4>
+                          </div>
+                          <ul className="space-y-1 text-[10px] text-gray-400">
+                            <li><span className="text-gray-500">Framework:</span> {arch.backend?.framework}</li>
+                            <li><span className="text-gray-500">Architecture:</span> {arch.backend?.architecture}</li>
+                            <li><span className="text-gray-500">API Style:</span> {arch.backend?.api_style}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {(arch.database?.provider || arch.authentication?.provider) && (
+                      <div className="grid grid-cols-2 gap-3">
+                        {arch.database?.provider && (
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Database className="h-3.5 w-3.5 text-emerald-400" />
+                              <h4 className="text-xs font-bold text-white">Database</h4>
+                            </div>
+                            <ul className="space-y-1 text-[10px] text-gray-400">
+                              <li><span className="text-gray-500">Provider:</span> {arch.database.provider}</li>
+                              <li><span className="text-gray-500">ORM:</span> {arch.database.orm}</li>
+                              <li><span className="text-gray-500">Models:</span> {arch.database.main_models?.join(', ')}</li>
+                            </ul>
+                          </div>
+                        )}
+                        {arch.authentication?.provider && (
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Key className="h-3.5 w-3.5 text-amber-400" />
+                              <h4 className="text-xs font-bold text-white">Authentication</h4>
+                            </div>
+                            <p className="text-[10px] text-gray-400 line-clamp-3">
+                              <span className="text-gray-500">Provider:</span> {arch.authentication.provider}
+                              <br />
+                              <span className="text-gray-500">Flow:</span> {arch.authentication.how_it_works}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {arch.important_files?.length > 0 && (
                       <div>
-                        <SectionHeading icon={AlertTriangle} label="Circular Dependencies" />
-                        <ul className="space-y-1.5">
-                          {arch.circularDependencies.map((w: string, i: number) => (
-                            <li key={i} className="text-[10px] font-mono text-amber-400 bg-amber-500/5 border border-amber-500/15 rounded px-2.5 py-1.5">
-                              {w}
+                        <SectionHeading icon={FileText} label="Important Files" />
+                        <ul className="space-y-2">
+                          {arch.important_files.map((file: any, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                              <FileCode2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-mono font-bold text-emerald-300">{file.path}</span>
+                                <p className="text-gray-400 mt-0.5 text-[10px]">{file.reason}</p>
+                              </div>
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
 
-                    {arch.recommendations?.length > 0 && (
+                    {arch.developer_notes?.length > 0 && (
                       <div>
-                        <SectionHeading icon={TrendingUp} label="Recommendations" />
+                        <SectionHeading icon={CheckCircle} label="Developer Notes" />
                         <ul className="space-y-2">
-                          {arch.recommendations.map((r: string, i: number) => (
-                            <li key={i} className="flex items-start gap-2 text-xs text-gray-300 leading-relaxed">
-                              <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                              <span>{r}</span>
+                          {arch.developer_notes.map((note: string, i: number) => (
+                            <li key={i} className="flex gap-2 text-[11px] text-gray-300 leading-relaxed">
+                              <span className="text-purple-400 font-mono font-bold shrink-0">{i + 1}.</span>
+                              <span>{note}</span>
                             </li>
                           ))}
                         </ul>
