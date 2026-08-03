@@ -169,7 +169,7 @@ function AnalyzeContent() {
     <div className="flex min-h-screen flex-col bg-[var(--background)]">
       <Navigation />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 pt-28 pb-12">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 pt-32 pb-12">
         <div className="fade-in-up">
           
           {/* Header */}
@@ -187,9 +187,9 @@ function AnalyzeContent() {
                 <label htmlFor="repo-url" className="block text-xs font-semibold uppercase tracking-wider text-gray-400">
                   GitHub Repository URL
                 </label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <GitBranch className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-gray-500" />
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="relative flex-1 w-full">
+                    <GitBranch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none z-10" />
                     <input
                       id="repo-url"
                       type="url"
@@ -197,7 +197,7 @@ function AnalyzeContent() {
                       placeholder="https://github.com/owner/repository"
                       value={githubUrl}
                       onChange={(e) => setGithubUrl(e.target.value)}
-                      className="premium-input w-full pl-11 text-sm py-3.5"
+                      className="premium-input w-full pl-10 pr-4 py-3 text-sm font-mono"
                     />
                   </div>
                   
