@@ -1,0 +1,12 @@
+Wamious Project Metrics
+=======================
+
+Total Files: 133
+Total Lines of Code: 14437
+
+Breakdown by extension:
+  .md: 8 files, 1043 lines
+  .ts: 64 files, 5980 lines
+  .tsx: 57 files, 6896 lines
+  .css: 2 files, 434 lines
+  .js: 2 files, 84 lines

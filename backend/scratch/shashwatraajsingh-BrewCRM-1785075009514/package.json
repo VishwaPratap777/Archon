@@ -1,0 +1,14 @@
+{
+  "name": "xeno-mini-crm",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:crm": "npm run start:dev -w crm-api",
+    "dev:channel": "npm run start:dev -w channel-stub",
+    "docker:up": "docker-compose up --build",
+    "seed": "npm run seed -w crm-api",
+    "build": "npm run build -w web"
+  }
+}

@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: brewcrm
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  crm-api:
+    build: ./apps/crm-api
+    ports:
+      - '3000:3000'
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: brewcrm
+      UPSTASH_REDIS_URL: ${UPSTASH_REDIS_URL}
+      CHANNEL_STUB_URL: http://channel-stub:3001
+      CRM_API_URL: http://crm-api:3000
+      FRONTEND_URL: http://localhost:3002
+      LLM_PROVIDER: ${LLM_PROVIDER:-openrouter}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-deepseek/deepseek-chat:free}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      - postgres
+
+  channel-stub:
+    build: ./apps/channel-stub
+    ports:
+      - '3001:3001'
+    environment:
+      UPSTASH_REDIS_URL: ${UPSTASH_REDIS_URL}
+      CRM_API_URL: http://crm-api:3000
+    depends_on:
+      - postgres
+
+  web:
+    build: 
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3000'
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    depends_on:
+      - crm-api
+
+volumes:
+  pgdata:
