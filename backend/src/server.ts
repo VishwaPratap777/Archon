@@ -229,7 +229,7 @@ app.delete('/api/repos', async (req, res) => {
 });
 
 // 3. POST /api/repos -> Initiate analysis
-app.post('/api/repos', optionalAuthenticateToken, async (req: AuthRequest, res) => {
+app.post('/api/repos', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { db } = await connectToDatabase();
     const { githubUrl } = req.body;

@@ -21,7 +21,7 @@ function AnalyzeContent() {
   const searchParams = useSearchParams();
   const repoIdFromQuery = searchParams.get('id');
 
-  const { authFetch, refreshUser } = useAuth();
+  const { user, openAuthModal, authFetch, refreshUser } = useAuth();
 
   const [githubUrl, setGithubUrl] = useState('');
   const [activeJobId, setActiveJobId] = useState<string | null>(repoIdFromQuery);
@@ -56,6 +56,12 @@ function AnalyzeContent() {
       setGithubUrl(urlFromQuery);
       
       const autoSubmit = async () => {
+        if (!user) {
+          openAuthModal('login');
+          setErrorMsg('Authentication required to analyze repositories. Please sign in or create an account.');
+          return;
+        }
+
         setIsSubmitting(true);
         setErrorMsg('');
         setLogs([]);
@@ -83,7 +89,7 @@ function AnalyzeContent() {
       
       autoSubmit();
     }
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   // Poll job status if activeJobId is present
   useEffect(() => {
@@ -132,6 +138,12 @@ function AnalyzeContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!githubUrl) return;
+
+    if (!user) {
+      openAuthModal('login');
+      setErrorMsg('Authentication required to analyze repositories. Please sign in or create an account.');
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMsg('');
@@ -221,10 +233,22 @@ function AnalyzeContent() {
                 </div>
               </div>
               
+              {/* Rate Limit Notice Callout */}
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-mono text-amber-200/90 leading-relaxed">
+                💡 <strong>Notice:</strong> Shared LLM API keys may hit rate limits. For seamless, uninterrupted analysis, clone this project locally and configure your own API keys in <code className="px-1 py-0.5 bg-black/30 rounded text-amber-300">.env</code>.
+              </div>
+
               {errorMsg && (
                 <div className="flex gap-2 p-4 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
-                  <XCircle className="h-4 w-4 shrink-0" />
-                  <span>{errorMsg}</span>
+                  <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">{errorMsg}</p>
+                    {errorMsg.toLowerCase().includes('rate limit') && (
+                      <p className="text-[11px] text-rose-300/80">
+                        Tip: You can clone this repository locally and set your own <code>GROQ_API_KEY</code> or <code>OPENAI_API_KEY</code> in <code>.env</code> to bypass rate limits.
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </form>

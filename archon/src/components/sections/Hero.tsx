@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import { Terminal, ArrowRight, GitBranch } from 'lucide-react';
+import { Terminal, ArrowRight, GitBranch, Lock } from 'lucide-react';
 import gsap from 'gsap';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { user, openAuthModal } = useAuth();
   const [repoUrl, setRepoUrl] = useState('');
   
   // Parallax glow effect using springs
@@ -20,6 +22,10 @@ export default function Hero() {
 
   const handleStartAnalysis = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      openAuthModal('login');
+      return;
+    }
     if (!repoUrl) return;
     router.push(`/analyze?url=${encodeURIComponent(repoUrl.trim())}`);
   };
@@ -140,6 +146,11 @@ export default function Hero() {
               Analyze <ArrowRight className="h-3 w-3 text-white" />
             </button>
           </form>
+
+          {/* Rate Limit Notice Callout */}
+          <div className="w-full text-center px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] font-mono text-amber-200/90 leading-relaxed">
+            💡 <strong>Notice:</strong> Shared LLM API keys may hit rate limits. For seamless analysis, clone this project locally and add your own API keys in <code className="px-1 py-0.5 bg-black/30 rounded text-amber-300">.env</code>.
+          </div>
 
           {/* Under-caption link */}
           <a

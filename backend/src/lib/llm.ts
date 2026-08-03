@@ -161,6 +161,12 @@ export async function callLLM(prompt: string, systemPrompt: string, options?: Ll
   }
 
   if (lastError) {
+    const isRateLimit = /429|rate limit|quota|too many requests/i.test(lastError.message);
+    if (isRateLimit) {
+      throw new Error(
+        `Rate Limit Exceeded (HTTP 429): Public LLM API quota has been exhausted. Please wait a few minutes or clone the repository locally and set your own API keys in .env for seamless analysis.`
+      );
+    }
     throw new Error(`LLM provider failed: ${lastError.message}`);
   }
   throw new Error('LLM API Key missing in environment variables. Please set OPENAI_API_KEY, GROQ_API_KEY, or ANTHROPIC_API_KEY in .env.');
@@ -284,7 +290,13 @@ export async function* streamLLM(
   }
 
   if (lastError) {
-    yield `Error: LLM provider failed: ${lastError.message}`;
+    const isRateLimit = /429|rate limit|quota|too many requests/i.test(lastError.message);
+    if (isRateLimit) {
+      throw new Error(
+        `Rate Limit Exceeded (HTTP 429): Public LLM API quota has been exhausted. Please wait a few minutes or clone the repository locally and set your own API keys in .env for seamless analysis.`
+      );
+    }
+    throw new Error(`LLM provider failed: ${lastError.message}`);
   } else {
     yield 'Error: LLM API Key missing in environment variables.';
   }
