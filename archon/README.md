@@ -1,40 +1,47 @@
-# ΛRCHON - AI-Powered Repository Intelligence Platform
+# ΛRCHON — Web Application (Frontend)
 
-Archon is an advanced engineering intelligence platform that reconstructs codebase architecture, onboarding guidelines, technical debt, and history by parsing code ASTs and utilizing reasoning AI agents.
-
-## Getting Started
-
-### 1. Run MongoDB Local Server
-Ensure you have MongoDB running locally:
-```bash
-mongodb://127.0.0.1:27017/archon
-```
-
-### 2. Configure Credentials
-Copy `.env.local.example` or create `.env.local` in the `archon` directory:
-```bash
-GROQ_API_KEY=your-groq-key
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-GITHUB_PAT=your-github-pat
-```
+This directory contains the Next.js frontend client for **Archon — AI-Powered Repository Intelligence Platform**.
 
 > [!NOTE]
-> **AI Engine Priority & Optional Keys:**
-> - **Groq** (`llama-3.3-70b-versatile`) acts as the **primary, default engine** for ultra-high-speed analysis.
-> - **OpenAI** (`gpt-4o-mini`) and **Anthropic** (`claude-3.5-sonnet`) are configured as **optional fallbacks**.
-> - **If you clone this repository**, you do not need all keys! You can simply plug in your **OpenAI API Key** alone, and the system will automatically fall back to OpenAI to execute all agents and vector search embeddings.
+> For the primary project documentation, architecture diagrams, performance benchmarks, and deep-dive technical tradeoffs, see the root [README.md](../README.md).
 
-### 3. Run the Development Server
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+Ensure you have Node.js (v18+) installed and the backend server running on port 5000 (`http://localhost:5000`).
+
+### 2. Configure Environment Variables
+Copy `.env.local.example` or create `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+### 3. Run Development Server
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the landing page and start analyzing codebases.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Verification
-To verify code compiles and type checks:
+---
+
+## 🔑 AI Credentials & API Keys
+
+Archon supports bringing your own API keys. You can set them in `backend/.env` or in the application Settings modal:
+- **GROQ_API_KEY**: Primary high-speed reasoning engine (`llama-3.3-70b-versatile`).
+- **OPENAI_API_KEY**: Fallback engine (`gpt-4o-mini` / `text-embedding-3-small`). Can be used as the **sole key** for all operations.
+- **ANTHROPIC_API_KEY**: Optional fallback engine (`claude-3.5-sonnet`).
+- **GITHUB_PAT**: Optional Personal Access Token for private repository analysis.
+
+---
+
+## 🛠️ Production Build Verification
+
+To verify frontend compilation:
 ```bash
 npm run build
 ```
