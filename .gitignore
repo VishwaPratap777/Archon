@@ -41,3 +41,10 @@ next-env.d.ts
 scratch/
 **/scratch/
 test_keys.ts
+
+# Internal Metrics & Workflow Notes
+metrics.txt
+rag_metrics.txt
+test beforeRAG.md
+workflow.md
+
