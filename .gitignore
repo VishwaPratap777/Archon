@@ -42,9 +42,14 @@ scratch/
 **/scratch/
 test_keys.ts
 
-# Internal Metrics & Workflow Notes
+# Internal Metrics, Documentation & Development Scripts
 metrics.txt
 rag_metrics.txt
 test beforeRAG.md
 workflow.md
+interview.md
+SKILL.md
+architecture_phases.md
+generate_metrics.js
+
 
